@@ -59,6 +59,7 @@ void setup_shunt();
 #include "SONO-BATTERY.h"
 #include "TESLA-BATTERY.h"
 #include "TESLA-LEGACY-BATTERY.h"
+#include "TESLA-SX-MOD-BATTERY.h"
 #include "TEST-FAKE-BATTERY.h"
 #include "THINK-BATTERY.h"
 #include "THUNDERSTRUCK-BMS.h"
