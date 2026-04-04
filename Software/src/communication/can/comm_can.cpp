@@ -179,6 +179,19 @@ bool init_CAN() {
       set_event(EVENT_CANMCP2515_INIT_FAILURE, (uint8_t)errorCode2515);
       return false;
     }
+  } else {
+    // MCP2515 not used but may be physically present on board (e.g. LilyGo T-2CAN).
+    // Put it in a known state to prevent SPI noise and unpredictable power draw.
+    auto cs_pin = esp32hal->MCP2515_CS();
+    auto rst_pin = esp32hal->MCP2515_RST();
+    if (cs_pin != GPIO_NUM_NC) {
+      pinMode(cs_pin, OUTPUT);
+      digitalWrite(cs_pin, HIGH);  // Deassert CS - keep off SPI bus
+    }
+    if (rst_pin != GPIO_NUM_NC) {
+      pinMode(rst_pin, OUTPUT);
+      digitalWrite(rst_pin, LOW);  // Hold in reset - minimum power draw
+    }
   }
 
   auto fdNativeIt = can_receivers.find(CANFD_NATIVE);
@@ -233,6 +246,14 @@ bool init_CAN() {
       logging.println(errorCode2517, HEX);
       set_event(EVENT_CANMCP2518FD_INIT_FAILURE, (uint8_t)errorCode2517);
       return false;
+    }
+  } else {
+    // MCP2518 not used but may be physically present on board.
+    // Put it in a known state to prevent SPI noise and unpredictable power draw.
+    auto cs_pin = esp32hal->MCP2517_CS();
+    if (cs_pin != GPIO_NUM_NC) {
+      pinMode(cs_pin, OUTPUT);
+      digitalWrite(cs_pin, HIGH);  // Deassert CS - keep off SPI bus
     }
   }
 
