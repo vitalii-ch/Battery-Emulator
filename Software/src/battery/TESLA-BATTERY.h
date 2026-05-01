@@ -47,9 +47,9 @@ class TeslaBattery : public CanBattery {
   static const int FLOAT_MAX_POWER_W = 200;           // W, what power to allow for top balancing battery
   static const int FLOAT_START_MV = 20;               // mV, how many mV under overvoltage to start float charging
   static const int MAX_PACK_VOLTAGE_SX_NCMA = 4600;   // V+1, if pack voltage goes over this, charge stops
-  static const int MIN_PACK_VOLTAGE_SX_NCMA = 3100;   // V+1, if pack voltage goes over this, charge stops
+  static const int MIN_PACK_VOLTAGE_SX_NCMA = 2850;   // V+1, if pack voltage goes over this, charge stops
   static const int MAX_PACK_VOLTAGE_3Y_NCMA = 4030;   // V+1, if pack voltage goes over this, charge stops
-  static const int MIN_PACK_VOLTAGE_3Y_NCMA = 3100;   // V+1, if pack voltage goes below this, discharge stops
+  static const int MIN_PACK_VOLTAGE_3Y_NCMA = 2850;   // V+1, if pack voltage goes below this, discharge stops
   static const int MAX_PACK_VOLTAGE_3Y_LFP = 3880;    // V+1, if pack voltage goes over this, charge stops
   static const int MIN_PACK_VOLTAGE_3Y_LFP = 2968;    // V+1, if pack voltage goes below this, discharge stops
   static const int MAX_CELL_DEVIATION_NCA_NCM = 500;  //LED turns yellow on the board if mv delta exceeds this value
@@ -79,12 +79,12 @@ class TeslaBattery : public CanBattery {
   //0x221 VCFRONT_LVPowerState
   uint8_t alternateMux = 0;
   uint8_t frameCounter_TESLA_221 = 15;  // Start at 15 for Mux 0
-  uint8_t vehicleState = 0;             // "OFF": 0, "DRIVE": 1, "ACCESSORY": 2, "GOING_DOWN": 3
+  uint8_t vehicleState = 1;             // "OFF": 0, "DRIVE": 1, "ACCESSORY": 2, "GOING_DOWN": 3
   static const uint8_t CAR_OFF = 0;
   static const uint8_t CAR_DRIVE = 1;
   static const uint8_t ACCESSORY = 2;
   static const uint8_t GOING_DOWN = 3;
-  uint8_t powerDownSeconds = 3;  // Car power down (i.e. contactor open) tracking timer, 3 seconds per sendingState
+  uint8_t powerDownSeconds = 9;  // Car power down (i.e. contactor open) tracking timer, 3 seconds per sendingState
   //0x2E1 VCFRONT_status, 6 mux tracker
   uint8_t muxNumber_TESLA_2E1 = 0;
   //0x334 UI
