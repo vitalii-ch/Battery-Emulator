@@ -3,39 +3,33 @@
 
 #include "TESLA-BATTERY.h"
 
+// Replays the original 2024-10 Tesla S/X TX behavior:
+// only 0x1CF (10ms), 0x118 (10ms), 0x221 static pair (30ms),
+// gated solely by inverter_allows_contactor_closing.
 class TeslaModelSXModBattery : public TeslaBattery {
  public:
   static constexpr const char* Name = "Tesla Model S/X Mod";
   virtual void setup(void);
   virtual void transmit_can(unsigned long currentMillis);
 
+  // UDS would inject 0x602/0x610 sequences that did not exist in the
+  // referenced 2024-10 behavior; disable to keep the experiment clean.
+  bool supports_clear_isolation() { return false; }
+  bool supports_reset_BMS() { return false; }
+  bool supports_reset_SOC() { return false; }
+
  private:
-  bool uds_active();
-  // When true, suppress all CAN TX while vehicleState is still OFF after power-on.
-  // Once vehicleState leaves OFF, the block is lifted permanently.
-  bool suppress_can_until_drive = true;
-  bool startup_can_blocked = true;
-
-  // When true, only send the 3 original S/X frames (0x221, 0x1CF, 0x118)
-  // instead of the full 25+ frame set from the base class.
-  bool minimal_can_frames = true;
-
-  // When true, use old static 0x221 format (two fixed frames at 30ms)
-  // instead of dynamic muxed frames with counter+checksum at 50ms.
-  bool use_static_221 = true;
-
-  // Old-style static contactor frames from tesla_sx_support branch
   CAN_frame TESLA_221_STATIC_1 = {.FD = false,
                                   .ext_ID = false,
                                   .DLC = 8,
                                   .ID = 0x221,
-                                  .data = {0x41, 0x11, 0x01, 0x00, 0x00, 0x00, 0x20, 0x96}};  // Close contactors
+                                  .data = {0x41, 0x11, 0x01, 0x00, 0x00, 0x00, 0x20, 0x96}};
 
   CAN_frame TESLA_221_STATIC_2 = {.FD = false,
                                   .ext_ID = false,
                                   .DLC = 8,
                                   .ID = 0x221,
-                                  .data = {0x61, 0x15, 0x01, 0x00, 0x00, 0x00, 0x20, 0xBA}};  // HV up for drive
+                                  .data = {0x61, 0x15, 0x01, 0x00, 0x00, 0x00, 0x20, 0xBA}};
 
   unsigned long previousMillis30 = 0;
 };
