@@ -1,4 +1,6 @@
 #include "CLUSTER-PROTOCOL.h"
+#include "../devboard/utils/types.h"
+#include <climits>
 
 namespace cluster_protocol {
 
@@ -98,8 +100,80 @@ void decode_frame4(const uint8_t buf[8], PackSnapshot& s) {
   s.number_of_cells = buf[7];
 }
 
-AggregateResult aggregate(const PackSnapshot[MAX_PACKS]) {
+// Worst-of priority for bms_status_enum:
+// FAULT > UPDATING > STANDBY > INACTIVE > DARKSTART > ACTIVE > others
+static int bms_status_priority(uint8_t s) {
+  switch (s) {
+    case FAULT:     return 5;
+    case UPDATING:  return 4;
+    case STANDBY:   return 3;
+    case INACTIVE:  return 2;
+    case DARKSTART: return 1;
+    case ACTIVE:    return 0;
+    default:        return 0;
+  }
+}
+
+AggregateResult aggregate(const PackSnapshot packs[MAX_PACKS]) {
   AggregateResult r = {};
+
+  uint32_t voltage_sum = 0;
+  uint16_t v_max = 0;
+  uint16_t v_min = 0xFFFF;
+  uint64_t soc_weighted = 0;     // sum(soc_i × cap_i)
+  uint64_t cap_total = 0;
+  uint16_t min_charge = 0xFFFF;
+  uint16_t min_discharge = 0xFFFF;
+  bool any_charge_zero = false;
+  bool any_discharge_zero = false;
+  uint16_t cell_max = 0;
+  uint16_t cell_min = 0xFFFF;
+  int16_t temp_max = INT16_MIN;
+  int16_t temp_min = INT16_MAX;
+  uint16_t soh_min = 0xFFFF;
+  uint8_t worst_bms = ACTIVE;
+  uint8_t balancing_or = 0;
+
+  for (uint8_t i = 0; i < MAX_PACKS; ++i) {
+    if (!packs[i].alive) continue;
+    r.n_alive++;
+    voltage_sum += packs[i].voltage_dV;
+    if (packs[i].voltage_dV > v_max) v_max = packs[i].voltage_dV;
+    if (packs[i].voltage_dV < v_min) v_min = packs[i].voltage_dV;
+    r.current_dA += packs[i].current_dA;
+    soc_weighted += (uint64_t)packs[i].reported_soc * (uint64_t)packs[i].total_capacity_Wh;
+    cap_total += packs[i].total_capacity_Wh;
+    r.total_capacity_Wh += packs[i].total_capacity_Wh;
+    r.remaining_capacity_Wh += packs[i].remaining_capacity_Wh;
+    if (packs[i].max_charge_current_dA == 0) any_charge_zero = true;
+    if (packs[i].max_charge_current_dA < min_charge) min_charge = packs[i].max_charge_current_dA;
+    if (packs[i].max_discharge_current_dA == 0) any_discharge_zero = true;
+    if (packs[i].max_discharge_current_dA < min_discharge) min_discharge = packs[i].max_discharge_current_dA;
+    if (packs[i].cell_max_voltage_mV > cell_max) cell_max = packs[i].cell_max_voltage_mV;
+    if (packs[i].cell_min_voltage_mV < cell_min) cell_min = packs[i].cell_min_voltage_mV;
+    if (packs[i].temperature_max_dC > temp_max) temp_max = packs[i].temperature_max_dC;
+    if (packs[i].temperature_min_dC < temp_min) temp_min = packs[i].temperature_min_dC;
+    if (packs[i].soh_pptt < soh_min) soh_min = packs[i].soh_pptt;
+    if (bms_status_priority(packs[i].bms_status) > bms_status_priority(worst_bms))
+      worst_bms = packs[i].bms_status;
+    balancing_or |= packs[i].balancing_status;
+  }
+
+  if (r.n_alive == 0) return r;  // already-zeroed result
+
+  r.voltage_dV = (uint16_t)(voltage_sum / r.n_alive);
+  r.voltage_max_dV = v_max;
+  r.voltage_min_dV = v_min;
+  r.reported_soc = (uint32_t)(cap_total > 0 ? (soc_weighted / cap_total) : 0);
+  r.max_charge_current_dA = any_charge_zero ? 0 : (uint16_t)(min_charge * r.n_alive);
+  r.max_discharge_current_dA = any_discharge_zero ? 0 : (uint16_t)(min_discharge * r.n_alive);
+  r.cell_max_voltage_mV = cell_max;
+  r.cell_min_voltage_mV = cell_min;
+  r.temperature_max_dC = temp_max;
+  r.temperature_min_dC = temp_min;
+  r.soh_pptt = soh_min;
+  r.bms_status = worst_bms;
+  r.balancing_status = balancing_or;
   return r;
 }
 
