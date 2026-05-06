@@ -98,4 +98,9 @@ void decode_frame4(const uint8_t buf[8], PackSnapshot& s) {
   s.number_of_cells = buf[7];
 }
 
+AggregateResult aggregate(const PackSnapshot[MAX_PACKS]) {
+  AggregateResult r = {};
+  return r;
+}
+
 }  // namespace cluster_protocol

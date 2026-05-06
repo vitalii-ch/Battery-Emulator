@@ -99,6 +99,31 @@ void decode_frame2(const uint8_t buf[8], PackSnapshot& s);
 void decode_frame3(const uint8_t buf[8], PackSnapshot& s);
 void decode_frame4(const uint8_t buf[8], PackSnapshot& s);
 
+// Aggregation result — fields populated by aggregate() from alive packs
+struct AggregateResult {
+  uint8_t  n_alive;
+  uint16_t voltage_dV;          // mean
+  int16_t  current_dA;          // sum
+  uint32_t reported_soc;        // capacity-weighted mean (0..10000)
+  uint16_t max_charge_current_dA;     // min × N_alive (0 if any pack=0)
+  uint16_t max_discharge_current_dA;  // min × N_alive (0 if any pack=0)
+  uint16_t cell_max_voltage_mV;       // MAX
+  uint16_t cell_min_voltage_mV;       // MIN
+  int16_t  temperature_max_dC;        // MAX
+  int16_t  temperature_min_dC;        // MIN
+  uint16_t soh_pptt;                  // MIN
+  uint8_t  bms_status;                // worst-of (FAULT > UPDATING > STANDBY > IDLE > ACTIVE)
+  uint8_t  balancing_status;          // OR (1 if any active)
+  uint32_t total_capacity_Wh;         // SUM
+  uint32_t remaining_capacity_Wh;     // SUM
+  uint16_t voltage_max_dV;            // for divergence check
+  uint16_t voltage_min_dV;            // for divergence check
+};
+
+// Compute aggregate over packs[0..MAX_PACKS-1]; only entries with alive=true considered.
+// Pure function — no side effects, no datalayer access. Easy to test.
+AggregateResult aggregate(const PackSnapshot packs[MAX_PACKS]);
+
 }  // namespace cluster_protocol
 
 #endif
