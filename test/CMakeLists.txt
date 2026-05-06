@@ -96,6 +96,8 @@ add_executable(tests
     ../Software/src/battery/BATTERIES.cpp
     ../Software/src/battery/Battery.cpp
     ../Software/src/battery/CLUSTER-PROTOCOL.cpp
+    ../Software/src/battery/CLUSTER-CAN.cpp
+    ../Software/src/battery/CLUSTER-HTML.cpp
     ../Software/src/battery/BMW-I3-BATTERY.cpp
     ../Software/src/battery/BMW-I3-HTML.cpp
     ../Software/src/battery/BMW-IX-BATTERY.cpp
