@@ -109,6 +109,9 @@ extern const char* name_for_inverter_type(InverterProtocolType type) {
     case InverterProtocolType::VCU:
       return VCUInverter::Name;
 
+    case InverterProtocolType::ClusterNodeCan:
+      return ClusterNodeCanInverter::Name;
+
     case InverterProtocolType::Highest:
       return "None";
   }
@@ -211,6 +214,10 @@ bool setup_inverter() {
 
     case InverterProtocolType::VCU:
       inverter = new VCUInverter();
+      break;
+
+    case InverterProtocolType::ClusterNodeCan:
+      inverter = new ClusterNodeCanInverter();
       break;
 
     case InverterProtocolType::None:

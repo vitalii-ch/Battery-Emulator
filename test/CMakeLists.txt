@@ -179,6 +179,7 @@ add_executable(tests
     ../Software/src/inverter/SOLXPOW-CAN.cpp
     ../Software/src/inverter/SUNGROW-CAN.cpp
     ../Software/src/inverter/VCU-CAN.cpp
+    ../Software/src/inverter/CLUSTER-NODE-CAN.cpp
     ../Software/src/charger/CHARGERS.cpp
     ../Software/src/charger/CHEVY-VOLT-CHARGER.cpp
     ../Software/src/charger/NISSAN-LEAF-CHARGER.cpp
