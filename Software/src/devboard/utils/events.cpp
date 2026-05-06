@@ -138,6 +138,12 @@ void init_events(void) {
   events.entries[EVENT_GPIO_CONFLICT].level = EVENT_LEVEL_ERROR;
   events.entries[EVENT_GPIO_NOT_DEFINED].level = EVENT_LEVEL_ERROR;
   events.entries[EVENT_BATTERY_TEMP_DEVIATION_HIGH].level = EVENT_LEVEL_WARNING;
+  events.entries[EVENT_CLUSTER_PACK_LOST].level = EVENT_LEVEL_ERROR;
+  events.entries[EVENT_CLUSTER_DUPLICATE_PACK_ID].level = EVENT_LEVEL_ERROR;
+  events.entries[EVENT_CLUSTER_UNCONFIGURED_PACK].level = EVENT_LEVEL_WARNING;
+  events.entries[EVENT_CLUSTER_VOLTAGE_DIVERGENCE].level = EVENT_LEVEL_WARNING;
+  events.entries[EVENT_CLUSTER_INSUFFICIENT_PACKS].level = EVENT_LEVEL_ERROR;
+  events.entries[EVENT_CLUSTER_TOPOLOGY_MISMATCH].level = EVENT_LEVEL_ERROR;
 }
 
 void set_event(EVENTS_ENUM_TYPE event, uint8_t data) {
@@ -397,6 +403,18 @@ String get_event_message_string(EVENTS_ENUM_TYPE event) {
     case EVENT_GPIO_CONFLICT:
       return "GPIO Pin Conflict: The pin used by '" + esp32hal->failed_allocator() + "' is already allocated by '" +
              esp32hal->conflicting_allocator() + "'. Please check your configuration and assign different pins.";
+    case EVENT_CLUSTER_PACK_LOST:
+      return "Cluster pack timeout: a satellite pack stopped responding. Check pack power and CAN wiring.";
+    case EVENT_CLUSTER_DUPLICATE_PACK_ID:
+      return "Cluster duplicate pack ID detected. Two satellites are using the same pack_id setting.";
+    case EVENT_CLUSTER_UNCONFIGURED_PACK:
+      return "Cluster unconfigured pack: a satellite is transmitting with pack_id=0. Set Pack ID on each satellite.";
+    case EVENT_CLUSTER_VOLTAGE_DIVERGENCE:
+      return "Cluster voltage divergence: pack voltages differ by more than 5V. Check pack health and contactor states.";
+    case EVENT_CLUSTER_INSUFFICIENT_PACKS:
+      return "Cluster insufficient packs: fewer alive packs than expected. Cluster set to FAULT, charge/discharge disabled.";
+    case EVENT_CLUSTER_TOPOLOGY_MISMATCH:
+      return "Cluster topology mismatch: satellite packs report different chemistry or cell count.";
     case EVENT_GPIO_NOT_DEFINED:
       return "Missing GPIO Assignment: The component '" + esp32hal->failed_allocator() +
              "' requires a GPIO pin that isn't configured. Please define a valid pin number in your settings.";
