@@ -8,6 +8,10 @@
 // gated solely by inverter_allows_contactor_closing.
 class TeslaModelSXModBattery : public TeslaBattery {
  public:
+  TeslaModelSXModBattery() : TeslaBattery() {}
+  TeslaModelSXModBattery(DATALAYER_BATTERY_TYPE* dl, DATALAYER_INFO_TESLA* extended, CAN_Interface targetCan)
+      : TeslaBattery(dl, extended, targetCan) {}
+
   static constexpr const char* Name = "Tesla Model S/X Mod";
   virtual void setup(void);
   virtual void transmit_can(unsigned long currentMillis);

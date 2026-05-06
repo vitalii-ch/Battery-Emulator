@@ -339,6 +339,16 @@ void setup_battery() {
       case BatteryType::TestFake:
         battery2 = new TestFakeBattery(&datalayer.battery2, can_config.battery_double);
         break;
+      case BatteryType::TeslaModel3Y:
+        battery2 = new TeslaModel3YBattery(&datalayer.battery2, &datalayer_extended.tesla_2, can_config.battery_double);
+        break;
+      case BatteryType::TeslaModelSX:
+        battery2 = new TeslaModelSXBattery(&datalayer.battery2, &datalayer_extended.tesla_2, can_config.battery_double);
+        break;
+      case BatteryType::TeslaModelSXMod:
+        battery2 =
+            new TeslaModelSXModBattery(&datalayer.battery2, &datalayer_extended.tesla_2, can_config.battery_double);
+        break;
       default:
         DEBUG_PRINTF("User tried enabling double battery on non-supported integration!\n");
         break;

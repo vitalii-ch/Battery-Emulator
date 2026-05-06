@@ -100,8 +100,10 @@ struct DATALAYER_BATTERY_STATUS_TYPE {
   /** A counter set each time a new message comes from battery.
    * This value then gets decremented every second. Incase we reach 0
    * we report the battery as missing entirely on the CAN bus.
-   */
-  uint8_t CAN_battery_still_alive = CAN_STILL_ALIVE;
+   * Default is 0 so that on boot we honestly report "no CAN yet" until
+   * the parser receives its first frame; otherwise parallel_safety and
+   * EVENT_CAN_BATTERY_MISSING are blind for the first 60 seconds. */
+  uint8_t CAN_battery_still_alive = 0;
   /** The current system status, which for now still has the name bms_status */
   bms_status_enum bms_status = ACTIVE;
   /** The current battery status, which for now has the name real_bms_status */
@@ -226,8 +228,8 @@ struct DATALAYER_CHARGER_TYPE {
   /** A counter set each time a new message comes from charger.
    * This value then gets decremented every second. Incase we reach 0
    * we report the battery as missing entirely on the CAN bus.
-   */
-  uint8_t CAN_charger_still_alive = CAN_STILL_ALIVE;
+   * Default 0 mirrors CAN_battery_still_alive — fail-honest at boot. */
+  uint8_t CAN_charger_still_alive = 0;
   /** True if charger is enabled */
   bool charger_HV_enabled = false;
   /** True if the 12V DC/DC output is enabled */
@@ -341,8 +343,8 @@ struct DATALAYER_SYSTEM_STATUS_TYPE {
   /** A counter set each time a new message comes from inverter.
    * This value then gets decremented every second. Incase we reach 0
    * we report the inverter as missing entirely on the CAN bus.
-   */
-  uint8_t CAN_inverter_still_alive = CAN_STILL_ALIVE;
+   * Default 0 mirrors CAN_battery_still_alive — fail-honest at boot. */
+  uint8_t CAN_inverter_still_alive = 0;
   /** 0 if starting up, 1 if contactors engaged, 2 if the contactors controlled by battery-emulator is opened */
   uint8_t contactors_engaged = 0;
   /** State of automatic precharge sequence */

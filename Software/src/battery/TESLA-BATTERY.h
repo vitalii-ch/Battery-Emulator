@@ -16,20 +16,32 @@ extern uint16_t user_selected_tesla_GTW_packEnergy;
 class TeslaBattery : public CanBattery {
  public:
   // Use the default constructor to create the first or single battery.
-  TeslaBattery() { allows_contactor_closing = &datalayer.system.status.battery_allows_contactor_closing; }
+  TeslaBattery() : renderer(&datalayer_extended.tesla, &datalayer.battery) {
+    datalayer_battery = &datalayer.battery;
+    datalayer_extended_tesla = &datalayer_extended.tesla;
+    allows_contactor_closing = &datalayer.system.status.battery_allows_contactor_closing;
+  }
+
+  // Second-battery constructor: per-instance datalayer + CAN interface routing.
+  TeslaBattery(DATALAYER_BATTERY_TYPE* datalayer_ptr, DATALAYER_INFO_TESLA* extended, CAN_Interface targetCan)
+      : CanBattery(targetCan), renderer(extended, datalayer_ptr) {
+    datalayer_battery = datalayer_ptr;
+    datalayer_extended_tesla = extended;
+    allows_contactor_closing = nullptr;
+  }
 
   virtual void handle_incoming_can_frame(CAN_frame rx_frame);
   virtual void update_values();
   virtual void transmit_can(unsigned long currentMillis);
 
   bool supports_clear_isolation() { return true; }
-  void clear_isolation() { datalayer.battery.settings.user_requests_tesla_isolation_clear = true; }
+  void clear_isolation() { datalayer_battery->settings.user_requests_tesla_isolation_clear = true; }
 
   bool supports_reset_BMS() { return true; }
-  void reset_BMS() { datalayer.battery.settings.user_requests_tesla_bms_reset = true; }
+  void reset_BMS() { datalayer_battery->settings.user_requests_tesla_bms_reset = true; }
 
   bool supports_reset_SOC() { return true; }
-  void reset_SOC() { datalayer.battery.settings.user_requests_tesla_soc_reset = true; }
+  void reset_SOC() { datalayer_battery->settings.user_requests_tesla_soc_reset = true; }
 
   bool supports_charged_energy() { return true; }
 
@@ -63,10 +75,28 @@ class TeslaBattery : public CanBattery {
 
   bool operate_contactors = false;
 
+  // Per-instance datalayer pointers — set by the constructors so that battery #2
+  // writes into datalayer.battery2 / datalayer_extended.tesla_2 instead of #1.
+  DATALAYER_BATTERY_TYPE* datalayer_battery;
+  DATALAYER_INFO_TESLA* datalayer_extended_tesla;
+
   // If not null, this battery decides when the contactor can be closed and writes the value here.
   bool* allows_contactor_closing;
 
   void printFaultCodesIfActive();
+
+  // Per-instance helpers (state must not be shared between battery #1 and #2).
+  void generateTESLA_213(CAN_frame& f);
+  char* dayOfYearToDate(int year, int dayOfYear);
+  uint8_t TESLA_213_counter = 0;
+  char battery_manufactureDate_buffer[11] = {0};  // "YYYY-MM-DD\0" — owned by this instance
+
+  // Per-instance state for handle_incoming_can_frame() — must NOT be free-function
+  // statics because dual-battery would share them between two Tesla packs.
+  bool mux0_read = false;
+  bool mux1_read = false;
+  uint8_t mux_zero_counter = 0;
+  uint8_t mux_max = 0;
 
   unsigned long previousMillis10 = 0;    // will store last time a 50ms CAN Message was sent
   unsigned long previousMillis50 = 0;    // will store last time a 50ms CAN Message was sent
@@ -97,7 +127,6 @@ class TeslaBattery : public CanBattery {
   //0x7FF GTW_carConfig, 5 mux tracker
   uint8_t muxNumber_TESLA_7FF = 0;
   //Max percentage charge tracker
-  uint16_t previous_max_percentage = datalayer.battery.settings.max_percentage;
 
   //0x082 UI_tripPlanning: "cycle_time" 1000ms
   static constexpr CAN_frame TESLA_082 = {.FD = false,
@@ -892,12 +921,20 @@ class TeslaBattery : public CanBattery {
 
 class TeslaModel3YBattery : public TeslaBattery {
  public:
+  TeslaModel3YBattery() : TeslaBattery() {}
+  TeslaModel3YBattery(DATALAYER_BATTERY_TYPE* dl, DATALAYER_INFO_TESLA* extended, CAN_Interface targetCan)
+      : TeslaBattery(dl, extended, targetCan) {}
+
   static constexpr const char* Name = "Tesla Model 3/Y";
   virtual void setup(void);
 };
 
 class TeslaModelSXBattery : public TeslaBattery {
  public:
+  TeslaModelSXBattery() : TeslaBattery() {}
+  TeslaModelSXBattery(DATALAYER_BATTERY_TYPE* dl, DATALAYER_INFO_TESLA* extended, CAN_Interface targetCan)
+      : TeslaBattery(dl, extended, targetCan) {}
+
   static constexpr const char* Name = "Tesla Model S/X";
   virtual void setup(void);
 };

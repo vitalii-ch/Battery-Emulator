@@ -697,7 +697,7 @@ struct DATALAYER_INFO_TESLA {
   uint8_t battery_partNumber[12] = {0};    //stores raw HEX values for ASCII chars
   uint8_t PCS_partNumber[13] = {0};        //stores raw HEX values for ASCII chars
   uint8_t HVP_partNumber[13] = {0};        //stores raw HEX values for ASCII chars
-  char* battery_manufactureDate;
+  char* battery_manufactureDate = nullptr;
 };
 
 struct DATALAYER_INFO_NISSAN_LEAF {
@@ -978,6 +978,7 @@ class DataLayerExtended {
   DATALAYER_INFO_KIAHYUNDAI64 KiaHyundai64_2;
   DATALAYER_INFO_RIVIAN rivian;
   DATALAYER_INFO_TESLA tesla;
+  DATALAYER_INFO_TESLA tesla_2;
   DATALAYER_INFO_NISSAN_LEAF nissanleaf;
   DATALAYER_INFO_MEB meb;
   DATALAYER_INFO_VOLVO_POLESTAR VolvoPolestar;

@@ -622,9 +622,18 @@ void init_webserver() {
           if (battIndex == "2") {
             batt = battery3;
           }
-          if (batt) {
-            cmd.action(batt);
+          if (!batt) {
+            request->send(404, "text/plain", "Target battery not present.");
+            return;
           }
+          // UI hides buttons when condition() is false; mirror that gating
+          // server-side so direct PUTs cannot arm a UDS state machine on a
+          // battery class (e.g. SX-Mod) that never services it.
+          if (!cmd.condition(batt)) {
+            request->send(400, "text/plain", "Command not supported by this battery.");
+            return;
+          }
+          cmd.action(batt);
           request->send(200, "text/plain", "Command performed.");
         });
   }

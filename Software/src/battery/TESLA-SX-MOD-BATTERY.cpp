@@ -1,8 +1,8 @@
 #include "TESLA-SX-MOD-BATTERY.h"
 
 // Defined in TESLA-BATTERY.cpp -- the only frame arrays we reuse.
-extern CAN_frame can_msg_1CF[];
-extern CAN_frame can_msg_118[];
+extern const CAN_frame can_msg_1CF[];
+extern const CAN_frame can_msg_118[];
 
 void TeslaModelSXModBattery::setup(void) {
   if (allows_contactor_closing) {
@@ -11,11 +11,23 @@ void TeslaModelSXModBattery::setup(void) {
 
   strncpy(datalayer.system.info.battery_protocol, Name, 63);
   datalayer.system.info.battery_protocol[63] = '\0';
-  datalayer.battery.info.max_design_voltage_dV = MAX_PACK_VOLTAGE_SX_NCMA;
-  datalayer.battery.info.min_design_voltage_dV = MIN_PACK_VOLTAGE_SX_NCMA;
-  datalayer.battery.info.max_cell_voltage_mV = MAX_CELL_VOLTAGE_NCA_NCM;
-  datalayer.battery.info.min_cell_voltage_mV = MIN_CELL_VOLTAGE_NCA_NCM;
-  datalayer.battery.info.max_cell_voltage_deviation_mV = MAX_CELL_DEVIATION_NCA_NCM;
+  // Suppress parent's auto-triggered UDS query for the BMS part number:
+  // SX-Mod overrides transmit_can() and never advances UDS state machines,
+  // so leaving this false would park stateMachineBMSQuery at 0 forever.
+  parsed_battery_partNumber = true;
+
+  // Defense-in-depth: clear any user-trigger UDS request flags up-front so the
+  // inherited update_values() cannot arm stateMachine{ClearIsolationFault,BMSReset,SOCReset}
+  // — Mod's transmit_can() never services them and they would silently hang at 0.
+  datalayer_battery->settings.user_requests_tesla_isolation_clear = false;
+  datalayer_battery->settings.user_requests_tesla_bms_reset = false;
+  datalayer_battery->settings.user_requests_tesla_soc_reset = false;
+
+  datalayer_battery->info.max_design_voltage_dV = MAX_PACK_VOLTAGE_SX_NCMA;
+  datalayer_battery->info.min_design_voltage_dV = MIN_PACK_VOLTAGE_SX_NCMA;
+  datalayer_battery->info.max_cell_voltage_mV = MAX_CELL_VOLTAGE_NCA_NCM;
+  datalayer_battery->info.min_cell_voltage_mV = MIN_CELL_VOLTAGE_NCA_NCM;
+  datalayer_battery->info.max_cell_voltage_deviation_mV = MAX_CELL_DEVIATION_NCA_NCM;
 }
 
 void TeslaModelSXModBattery::transmit_can(unsigned long currentMillis) {

@@ -292,6 +292,9 @@ void update_machineryprotection() {
 
     if (!datalayer.battery2.status.CAN_battery_still_alive) {
       set_event(EVENT_CAN_BATTERY2_MISSING, can_config.battery_double);
+      // Without CAN we cannot trust pack #2 voltage/SOC/temps; force the
+      // pack #2 contactor to open so we don't hold a HV bond to a silent BMS.
+      datalayer.system.status.battery2_allowed_contactor_closing = false;
     } else {
       datalayer.battery2.status.CAN_battery_still_alive--;
       clear_event(EVENT_CAN_BATTERY2_MISSING);
@@ -352,6 +355,8 @@ void update_machineryprotection() {
 
     if (!datalayer.battery3.status.CAN_battery_still_alive) {
       set_event(EVENT_CAN_BATTERY3_MISSING, can_config.battery_triple);
+      // Mirror battery2: silent BMS must not retain a closed HV contactor.
+      datalayer.system.status.battery3_allowed_contactor_closing = false;
     } else {
       datalayer.battery3.status.CAN_battery_still_alive--;
       clear_event(EVENT_CAN_BATTERY3_MISSING);

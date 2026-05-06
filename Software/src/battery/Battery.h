@@ -76,6 +76,7 @@ extern battery_chemistry_enum user_selected_battery_chemistry;
 // Defines the interface to call battery specific functionality.
 class Battery {
  public:
+  virtual ~Battery() = default;
   virtual void setup(void) = 0;
   virtual void update_values() = 0;
 
