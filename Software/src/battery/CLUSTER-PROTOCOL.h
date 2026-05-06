@@ -36,8 +36,11 @@ constexpr uint16_t frame_id(uint16_t base, uint8_t pack_id) { return base + pack
 constexpr uint8_t pack_id_from_frame(uint16_t frame_id_value, uint16_t base) {
   return static_cast<uint8_t>(frame_id_value - base);
 }
+// Returns true if frame_id_value is a valid pack-frame for `base` (pack_id 1..MAX_VALID_PACK_ID).
+// Returns false for the base address itself (pack_id=0) — that's the "unconfigured pack"
+// sentinel and is handled separately by callers.
 constexpr bool is_frame_for_base(uint16_t frame_id_value, uint16_t base) {
-  return frame_id_value >= base && frame_id_value <= (base + MAX_VALID_PACK_ID);
+  return frame_id_value > base && frame_id_value <= (base + MAX_VALID_PACK_ID);
 }
 
 // Per-pack snapshot of all fields received from frames 0..4
