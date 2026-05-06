@@ -405,6 +405,10 @@ String raw_settings_processor(const String& var, BatteryEmulatorSettingsStore& s
     return settings.getBool("CNTCTRL") ? "checked" : "";
   }
 
+  if (var == "LOWPASSFILTER") {
+    return settings.getBool("LOWPASSFILTER") ? "checked" : "";
+  }
+
   if (var == "NCCONTACTOR") {
     return settings.getBool("NCCONTACTOR") ? "checked" : "";
   }
@@ -475,6 +479,10 @@ String raw_settings_processor(const String& var, BatteryEmulatorSettingsStore& s
 
   if (var == "DCHGPOWER") {
     return String(settings.getUInt("DCHGPOWER", 0));
+  }
+
+  if (var == "RAMPDOWNSOC") {
+    return String(settings.getUInt("RAMPDOWNSOC", 9000));
   }
 
   if (var == "LOCALIP1") {
@@ -1197,6 +1205,7 @@ const char* getCANInterfaceName(CAN_Interface interface) {
     form[data-battery="40"] .if-estimated,
     form[data-battery="41"] .if-estimated,
     form[data-battery="44"] .if-estimated,
+    form[data-battery="50"] .if-estimated,
     form[data-battery="51"] .if-estimated {
       display: contents;
     }
@@ -1402,6 +1411,11 @@ const char* getCANInterfaceName(CAN_Interface interface) {
         <input type='number' name='DCHGPOWER' value="%DCHGPOWER%" 
         min="0" max="65000" step="1"
         title="Continous max discharge power. Used since CAN data not valid for this integration. Do not set too high!" />
+
+        <label>Rampdown SOC, pptt: </label>
+        <input type='number' name='RAMPDOWNSOC' value="%RAMPDOWNSOC%" 
+        min="7000" max="9000" step="1"
+        title="SOC percentage to start ramping down from max charge power towards 0W at 100.00pct" />
         </div>
 
         <div class="if-socestimated">
@@ -1482,6 +1496,10 @@ const char* getCANInterfaceName(CAN_Interface interface) {
         %INVCOMM%     
         </select>
         </div>
+
+        <label>Inverter limits low pass filter: </label>
+        <input type='checkbox' name='LOWPASSFILTER' value='on' %LOWPASSFILTER% 
+        title="Applies a low pass filter to charge/discharge rates to prevent oscillation." />
 
         <div class="if-sofar">
         <label>Sofar Battery ID (0-15): </label>
