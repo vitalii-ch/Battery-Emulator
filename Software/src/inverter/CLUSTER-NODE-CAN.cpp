@@ -1,4 +1,5 @@
 #include "CLUSTER-NODE-CAN.h"
+#include <Arduino.h>
 #include "../battery/CLUSTER-PROTOCOL.h"
 #include "../datalayer/datalayer.h"
 
@@ -69,5 +70,26 @@ void ClusterNodeCanInverter::transmit_can(unsigned long currentMillis) {
 }
 
 void ClusterNodeCanInverter::map_can_frame_to_variable(CAN_frame rx_frame) {
-  (void)rx_frame;  // satellite ignores everything on cluster bus (master is read-only)
+  if (rx_frame.ID == MASTER_PERMISSIONS_FRAME_ID) {
+    decode_permissions(rx_frame.data.u8, last_permissions_bitmap, last_master_seq);
+    last_master_frame_ms = millis();
+    master_seen_ever = true;
+  }
+}
+
+bool ClusterNodeCanInverter::allows_contactor_closing() {
+  uint8_t pack_id = user_selected_cluster_node_pack_id;
+  if (pack_id < MIN_VALID_PACK_ID || pack_id > MAX_VALID_PACK_ID) {
+    // Unconfigured satellite — never permit
+    return false;
+  }
+  if (!master_seen_ever) {
+    return false;
+  }
+  if (millis() - last_master_frame_ms > MASTER_HEARTBEAT_TIMEOUT_MS) {
+    // Master heartbeat lost — fail-safe open
+    return false;
+  }
+  uint8_t bit_index = pack_id - 1;
+  return (last_permissions_bitmap >> bit_index) & 0x01;
 }
