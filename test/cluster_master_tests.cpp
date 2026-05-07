@@ -108,3 +108,76 @@ TEST_F(ClusterMasterTest, ChargeLimitMinTimesNAlive) {
   EXPECT_EQ(datalayer.battery.status.max_charge_current_dA, 100);   // min(50)*2
   EXPECT_EQ(datalayer.battery.status.max_discharge_current_dA, 400);  // min(200)*2
 }
+
+// v2 contactor permission tests
+
+TEST_F(ClusterMasterTest, PermissionBitmapZeroWhenNoPacks) {
+  master->update_values();
+  EXPECT_EQ(master->current_permission_bitmap(), 0);
+}
+
+TEST_F(ClusterMasterTest, PermissionBitmapZeroWhenInsufficientPacks) {
+  user_selected_cluster_expected_pack_count = 3;
+  send_frame0(1, 4000, 0, 5000, ACTIVE, 1);
+  send_frame0(2, 4000, 0, 5000, ACTIVE, 1);
+  master->update_values();
+  EXPECT_EQ(master->current_permission_bitmap(), 0);
+}
+
+TEST_F(ClusterMasterTest, PermissionBitmapZeroOnVoltageSpread) {
+  user_selected_cluster_expected_pack_count = 2;
+  // Spread = 16 dV (1.6V) > CONTACTOR_CLOSE_VOLTAGE_THRESHOLD_DV (15 dV / 1.5V)
+  send_frame0(1, 4000, 0, 5000, ACTIVE, 1);
+  send_frame3(1, 30000, 15000);
+  send_frame0(2, 4016, 0, 5000, ACTIVE, 1);
+  send_frame3(2, 30000, 15000);
+  master->update_values();
+  EXPECT_EQ(master->current_permission_bitmap(), 0);
+}
+
+TEST_F(ClusterMasterTest, PermissionBitmapSetWhenAllOk) {
+  user_selected_cluster_expected_pack_count = 2;
+  send_frame0(1, 4000, 0, 5000, ACTIVE, 1);
+  send_frame3(1, 30000, 15000);
+  send_frame0(2, 4010, 0, 5000, ACTIVE, 1);
+  send_frame3(2, 30000, 15000);
+  master->update_values();
+  // Bits 0 and 1 set = packs 1 and 2 alive and permitted
+  EXPECT_EQ(master->current_permission_bitmap(), 0x03);
+}
+
+TEST_F(ClusterMasterTest, PermissionBitmapZeroOnFault) {
+  user_selected_cluster_expected_pack_count = 2;
+  send_frame0(1, 4000, 0, 5000, ACTIVE, 1);
+  send_frame3(1, 30000, 15000);
+  send_frame0(2, 4000, 0, 5000, FAULT, 1);  // pack 2 in FAULT
+  send_frame3(2, 30000, 15000);
+  master->update_values();
+  EXPECT_EQ(master->current_permission_bitmap(), 0);
+}
+
+TEST_F(ClusterMasterTest, PermissionBitmapClearsAfterPackTimeout) {
+  user_selected_cluster_expected_pack_count = 2;
+  send_frame0(1, 4000, 0, 5000, ACTIVE, 1);
+  send_frame3(1, 30000, 15000);
+  send_frame0(2, 4000, 0, 5000, ACTIVE, 1);
+  send_frame3(2, 30000, 15000);
+  master->update_values();
+  EXPECT_EQ(master->current_permission_bitmap(), 0x03);
+
+  // Advance time past pack timeout — both packs become not-alive
+  current_time += 2000;
+  master->update_values();
+  EXPECT_EQ(master->current_permission_bitmap(), 0);
+}
+
+TEST_F(ClusterMasterTest, PermissionAtExactThresholdAllowed) {
+  user_selected_cluster_expected_pack_count = 2;
+  // Spread = exactly 15 dV (1.5V) — at threshold, should still be permitted
+  send_frame0(1, 4000, 0, 5000, ACTIVE, 1);
+  send_frame3(1, 30000, 15000);
+  send_frame0(2, 4015, 0, 5000, ACTIVE, 1);
+  send_frame3(2, 30000, 15000);
+  master->update_values();
+  EXPECT_EQ(master->current_permission_bitmap(), 0x03);
+}
