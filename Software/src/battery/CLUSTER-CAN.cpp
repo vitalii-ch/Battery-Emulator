@@ -51,13 +51,21 @@ void ClusterCanBattery::handle_incoming_can_frame(CAN_frame rx_frame) {
   uint8_t idx = pack_id - 1;
   PackSnapshot& s = packs[idx];
 
-  // Frame 0 carries seq counter — detect duplicate ID via sequence anomaly
+  // Frame 0 carries seq counter — detect duplicate ID via sequence anomaly.
+  // Two satellites with the same pack_id will interleave their counters,
+  // so we expect to see the seq either matching expected_next or close to
+  // it (allowing a few lost frames). A large negative jump in (buf_seq -
+  // expected_next), interpreted as a signed int8, indicates the seq
+  // moved backwards by more than DUPLICATE_ID_BACKWARD_JUMP — a strong
+  // signal of two transmitters fighting for the same ID. Cast to int8_t
+  // means counter wrap (255 → 0) appears as delta = -1, not flagged.
+  constexpr int8_t DUPLICATE_ID_BACKWARD_JUMP = -8;
   if (decoder == decode_frame0 && s.seen_ever) {
     uint8_t prev_seq = s.last_seq;
     uint8_t expected_next = (uint8_t)(prev_seq + 1);
     uint8_t buf_seq = rx_frame.data.u8[7];
     int8_t delta = (int8_t)(buf_seq - expected_next);
-    if (delta < -8) {
+    if (delta < DUPLICATE_ID_BACKWARD_JUMP) {
       set_event(EVENT_CLUSTER_DUPLICATE_PACK_ID, pack_id);
     }
   }
@@ -136,6 +144,23 @@ void ClusterCanBattery::apply_to_datalayer(const AggregateResult& r) {
       datalayer.battery.info.max_cell_voltage_mV = packs[i].max_cell_voltage_limit_mV;
       datalayer.battery.info.chemistry = (battery_chemistry_enum)packs[i].chemistry;
       datalayer.battery.info.number_of_cells = packs[i].number_of_cells;
+      // Frame 4 doesn't carry min_cell_voltage_mV; derive a conservative default
+      // per chemistry so safety.cpp under-voltage checks use the right floor.
+      switch ((battery_chemistry_enum)packs[i].chemistry) {
+        case battery_chemistry_enum::LFP:
+          datalayer.battery.info.min_cell_voltage_mV = 2500;
+          break;
+        case battery_chemistry_enum::NCA:
+        case battery_chemistry_enum::NMC:
+          datalayer.battery.info.min_cell_voltage_mV = 2700;
+          break;
+        case battery_chemistry_enum::ZEBRA:
+          datalayer.battery.info.min_cell_voltage_mV = 1800;
+          break;
+        default:
+          datalayer.battery.info.min_cell_voltage_mV = 2700;
+          break;
+      }
       break;
     }
   }
