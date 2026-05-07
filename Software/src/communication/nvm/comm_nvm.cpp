@@ -1,11 +1,13 @@
 #include "comm_nvm.h"
 #include "../../battery/BATTERIES.h"
 #include "../../battery/Battery.h"
+#include "../../battery/CLUSTER-CAN.h"
 #include "../../battery/Shunt.h"
 #include "../../charger/CanCharger.h"
 #include "../../communication/can/comm_can.h"
 #include "../../devboard/mqtt/mqtt.h"
 #include "../../devboard/wifi/wifi.h"
+#include "../../inverter/CLUSTER-NODE-CAN.h"
 #include "../../inverter/INVERTERS.h"
 #include "../contactorcontrol/comm_contactorcontrol.h"
 #include "../equipmentstopbutton/comm_equipmentstopbutton.h"
@@ -80,6 +82,8 @@ void init_stored_settings() {
   user_selected_battery_chemistry =
       (battery_chemistry_enum)settings.getUInt("BATTCHEM", (int)battery_chemistry_enum::NCA);
   user_selected_inverter_protocol = (InverterProtocolType)settings.getUInt("INVTYPE", (int)InverterProtocolType::None);
+  user_selected_cluster_node_pack_id = (uint8_t)settings.getUInt("CLSTPACKID", 0);
+  user_selected_cluster_expected_pack_count = (uint8_t)settings.getUInt("CLSTPACKCNT", 1);
   user_selected_charger_type = (ChargerType)settings.getUInt("CHGTYPE", (int)ChargerType::None);
   user_selected_shunt_type = (ShuntType)settings.getUInt("SHUNTTYPE", (int)ShuntType::None);
   user_selected_max_pack_voltage_dV = settings.getUInt("BATTPVMAX", 0);

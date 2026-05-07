@@ -122,7 +122,7 @@ void ClusterCanBattery::apply_to_datalayer(const AggregateResult& r) {
   datalayer.battery.status.soh_pptt = r.soh_pptt;
   datalayer.battery.status.bms_status = (bms_status_enum)r.bms_status;
   datalayer.battery.status.balancing_status =
-      (balancing_status_enum)(r.balancing_status ? BALANCING_STATUS_ACTIVE : BALANCING_STATUS_INACTIVE);
+      r.balancing_status ? BALANCING_STATUS_ACTIVE : BALANCING_STATUS_READY;
   datalayer.battery.info.total_capacity_Wh = r.total_capacity_Wh;
   datalayer.battery.info.reported_total_capacity_Wh = r.total_capacity_Wh;
   datalayer.battery.status.remaining_capacity_Wh = r.remaining_capacity_Wh;

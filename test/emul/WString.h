@@ -73,6 +73,7 @@ class String {
   // Arduino-like methods (example)
   int length() const { return static_cast<int>(data.length()); }
   const char* c_str() const { return data.c_str(); }
+  bool reserve(unsigned int size) { data.reserve(size); return true; }
 
   // Friend functions to allow std::string + String
   friend String operator+(const std::string& lhs, const String& rhs) { return String(lhs + rhs.data); }
