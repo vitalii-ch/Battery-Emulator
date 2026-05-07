@@ -791,6 +791,14 @@ String raw_settings_processor(const String& var, BatteryEmulatorSettingsStore& s
     return String(settings.getUInt("SOFAR_ID", 0));
   }
 
+  if (var == "CLSTPACKID") {
+    return String(settings.getUInt("CLSTPACKID", 0));
+  }
+
+  if (var == "CLSTPACKCNT") {
+    return String(settings.getUInt("CLSTPACKCNT", 1));
+  }
+
   if (var == "PYLONSEND") {
     return String(settings.getUInt("PYLONSEND", 0));
   }
@@ -1311,6 +1319,16 @@ const char* getCANInterfaceName(CAN_Interface interface) {
       display: contents;
     }
 
+    form .if-cluster-node { display: none; }
+    form[data-inverter="25"] .if-cluster-node {
+      display: contents;
+    }
+
+    form .if-cluster-master { display: none; }
+    form[data-battery="53"] .if-cluster-master {
+      display: contents;
+    }
+
     </style>
 )rawliteral"
 
@@ -1439,6 +1457,12 @@ const char* getCANInterfaceName(CAN_Interface interface) {
         <input name='PYLONBAUD' type='text' value="%PYLONBAUD%" pattern="[0-9]+" title="Select CAN bus baudrate (500kbps for most batteries, 250kbps for some configurations)"/>
         </div>
 
+        <div class="if-cluster-master">
+        <label>Cluster expected pack count (1-8): </label>
+        <input name='CLSTPACKCNT' type='number' min='1' max='8' value="%CLSTPACKCNT%"
+        title="How many satellite packs the master expects on the cluster CAN bus. Cluster goes to FAULT if fewer packs are alive." />
+        </div>
+
         <div class="if-cbms">
         <label>Battery max design voltage (V): </label>
         <input name='BATTPVMAX' pattern="[0-9]+(\.[0-9]+)?" type='text' value='%BATTPVMAX%'   
@@ -1504,6 +1528,12 @@ const char* getCANInterfaceName(CAN_Interface interface) {
         <div class="if-sofar">
         <label>Sofar Battery ID (0-15): </label>
         <input name='SOFAR_ID' type='text' value="%SOFAR_ID%" pattern="[0-9]{1,2}" />
+        </div>
+
+        <div class="if-cluster-node">
+        <label>Cluster Pack ID (1-8): </label>
+        <input name='CLSTPACKID' type='number' min='1' max='8' value="%CLSTPACKID%"
+        title="Unique pack identifier for this satellite on the cluster CAN bus. Each satellite must have a different ID. 0 = unconfigured (will trigger alarm)." />
         </div>
 
         <div class="if-pylon-inverter">
