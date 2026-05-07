@@ -191,6 +191,36 @@ void ClusterCanBattery::update_values() {
   check_topology_consistency();
   apply_to_datalayer(r);
 
+  // v2: compute per-pack contactor permission bitmap.
+  // transmit_can() picks this up and broadcasts every MASTER_PERMISSIONS_PERIOD_MS.
+  latest_permission_bitmap = compute_permission_bitmap(r);
+
   datalayer.battery.status.CAN_battery_still_alive =
       (r.n_alive > 0) ? CAN_STILL_ALIVE : 0;
+}
+
+uint8_t ClusterCanBattery::compute_permission_bitmap(const AggregateResult& r) const {
+  // Cluster-wide preconditions: all packs share fate. If any of these fail,
+  // no satellite gets permission to close.
+  if (r.n_alive < user_selected_cluster_expected_pack_count) return 0;
+  if (r.bms_status == FAULT) return 0;
+  if (r.n_alive >= 2) {
+    uint16_t spread = r.voltage_max_dV - r.voltage_min_dV;
+    if (spread > CONTACTOR_CLOSE_VOLTAGE_THRESHOLD_DV) return 0;
+  }
+  // All cluster-level conditions OK; permit each individually-alive pack.
+  uint8_t bitmap = 0;
+  for (uint8_t i = 0; i < MAX_PACKS; ++i) {
+    if (packs[i].alive) bitmap |= (uint8_t)(1u << i);
+  }
+  return bitmap;
+}
+
+void ClusterCanBattery::transmit_can(unsigned long currentMillis) {
+  if (currentMillis - previousMillis_permissions >= MASTER_PERMISSIONS_PERIOD_MS) {
+    previousMillis_permissions = currentMillis;
+    permissions_seq++;
+    encode_permissions(tx_permissions_frame.data.u8, latest_permission_bitmap, permissions_seq);
+    transmit_can_frame(&tx_permissions_frame);
+  }
 }
