@@ -73,6 +73,7 @@ add_executable(tests
     bms_reset_tests.cpp
     cluster_protocol_tests.cpp
     cluster_aggregation_tests.cpp
+    cluster_master_tests.cpp
     battery/NissanLeafTest.cpp 
     battery/still_alive_tests.cpp
     can_log_based/canlog_safety_tests.cpp
