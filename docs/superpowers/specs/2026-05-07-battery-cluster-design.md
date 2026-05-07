@@ -1,6 +1,6 @@
 # Battery Cluster — масштабування паралельних пакетів через master/satellite
 
-**Status:** Design draft
+**Status:** Design draft (v1 implemented; v2 contactor coordination — see end)
 **Date:** 2026-05-07
 **Branch:** feature/master-slave-pair
 
@@ -309,7 +309,86 @@ Cluster — **чисто адитивна** фіча.
 3. Те саме для discharge
 4. `bms_status` cluster'а ≥ worst pack `bms_status` (worst-of-N)
 5. Pack timeout > 1000 ms → виключається з агрегації; `< expected_count` живих → FAULT
-6. Voltage divergence > 5V серед alive packs → warning, але БЕЗ автоматичної дії (контактори зовні)
+6. Voltage divergence > 5V серед alive packs → warning event (м'який сигнал)
+7. (v2) Voltage spread > 1.5V → master НЕ дає permission на закриття контакторів; satellite залишає контактори відкритими
+8. (v2) Master heartbeat timeout > 1500 ms → satellite вважає permission = false → BE відкриває контактор (fail-safe)
+
+## v2: Master-coordinated contactor permission
+
+**Заміна** концепції "external hardware" з v1. Master використовує існуючий BE-механізм `inverter_allows_contactor_closing` для централізованого voltage-matching та координації закриття контакторів усіх satellite. Pre-charge виконує кожен satellite свій локальний (через його battery-driver, без змін). Master лише гейтить **момент закриття main contactor** на основі агрегованої телеметрії.
+
+### Як це лягає на існуючу BE-архітектуру
+
+`InverterProtocol::controls_contactor()` і `allows_contactor_closing()` — стандартні віртуальні методи (`InverterProtocol.h:53-55`). У `comm_contactorcontrol.cpp:143-144`:
+```cpp
+if (inverter && inverter->controls_contactor()) {
+  datalayer.system.status.inverter_allows_contactor_closing = inverter->allows_contactor_closing();
+}
+```
+Цей флаг далі гейтить контактор у `comm_contactorcontrol.cpp:193, 201, 265` — повністю штатна логіка для будь-якого сьогоднішнього інвертора. Ми використовуємо її як є.
+
+### Новий frame: master → satellites
+
+Single broadcast frame, періодично:
+
+```
+Frame 0x5F0 — Cluster permissions, master broadcast every 100 ms:
+  [0]   permission_bitmap   (bit i = pack (i+1) may close main contactor)
+  [1]   sequence            (uint8 — інкремент per frame)
+  [2-7] reserved
+```
+
+CAN ID `0x5F0` стоїть окремо від satellite frame-base (0x500..0x540), не перетинається.
+
+### Master permission rule
+
+Для кожного `pack_id ∈ 1..MAX_PACKS` встановлюємо bit `(pack_id - 1)` тільки якщо ВСІ умови:
+
+1. `packs[pack_id - 1].alive` — pack живий
+2. `r.n_alive >= expected_pack_count` — достатньо пакетів у кластері
+3. `r.voltage_max_dV - r.voltage_min_dV <= CONTACTOR_CLOSE_VOLTAGE_THRESHOLD_DV` (15dV = 1.5V)
+4. `r.bms_status != FAULT` — кластер не у фолті
+
+Інакше bit залишається `0`. У результаті:
+- Усі пакети закриваються одночасно якщо все добре
+- Жоден не закривається якщо щось не так
+- Можливо у майбутньому — селективний deny конкретного пакета (сьогодні немає причини; всі або ніхто)
+
+### Satellite — `ClusterNodeCanInverter`
+
+```cpp
+bool controls_contactor() override { return true; }
+bool allows_contactor_closing() override {
+  uint8_t pid = user_selected_cluster_node_pack_id;
+  if (pid < 1 || pid > MAX_VALID_PACK_ID) return false;  // unconfigured
+  if (millis() - last_master_frame_ms > MASTER_HEARTBEAT_TIMEOUT_MS) return false;  // master gone
+  return (last_permissions_bitmap >> (pid - 1)) & 0x01;
+}
+```
+
+Receive handler оновлює `last_permissions_bitmap` і `last_master_frame_ms` коли приходить frame `0x5F0`.
+
+### Voltage threshold rationale
+
+Тримаємо два пороги на різних рівнях суворості:
+- `VOLTAGE_DIVERGENCE_THRESHOLD_DV = 50` (5V) — м'який, raise warning event, не блокує
+- `CONTACTOR_CLOSE_VOLTAGE_THRESHOLD_DV = 15` (1.5V) — суворий, блокує закриття контактора
+
+1.5V узгоджено з існуючим `parallel_safety.cpp` для double/triple-battery — однакова поведінка з double-battery режимом.
+
+### Fail-safe сценарії
+
+| Сценарій | Поведінка |
+|----------|-----------|
+| Master power loss / reboot | Frame не приходить → satellite через 1500ms → `false` → BE відкриває контактор |
+| Cluster CAN bus down | Frame не доходить → той самий timeout → відкриваються |
+| Один satellite тимчасово відстав | Master бачить voltage spread → drops permission для всіх → відкриваються до повернення |
+| Satellite з `pack_id = 0` | `allows_contactor_closing()` завжди false → не закривається. Master не присилатиме permission бо unconfigured pack alarm |
+| Master не визнає сатеміта | Satellite не отримує bit для свого pack_id → false |
+
+### Hardware implications
+
+Скасовується вимога з v1: "external hardware керує контакторами з voltage matching". Достатньо стандартних BE-керованих контакторів на satellite (як у single-pack BE сьогодні): pre-charge resistor + main contactor pin, керовані `comm_contactorcontrol.cpp`. Кожен satellite використовує свою існуючу схему.
 
 ## Відкриті питання / майбутні розширення
 
