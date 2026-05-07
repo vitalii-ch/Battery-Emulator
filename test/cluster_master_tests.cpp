@@ -38,6 +38,18 @@ class ClusterMasterTest : public ::testing::Test {
     encode_frame3(f.data.u8, total_Wh, rem_Wh);
     master->handle_incoming_can_frame(f);
   }
+  void send_frame5(uint8_t pack_id, uint8_t protocol_version) {
+    CAN_frame f = {.FD = false, .ext_ID = false, .DLC = 8, .ID = frame_id(FRAME5_BASE, pack_id), .data = {0}};
+    encode_frame5(f.data.u8, protocol_version);
+    master->handle_incoming_can_frame(f);
+  }
+  // Bring a satellite to "fully introduced" state: frame0 + frame3 + frame5 with
+  // the right protocol version. Permission tests typically need this.
+  void bring_up_pack(uint8_t pack_id, uint16_t v_dV) {
+    send_frame0(pack_id, v_dV, 0, 5000, ACTIVE, 1);
+    send_frame3(pack_id, 30000, 15000);
+    send_frame5(pack_id, CLUSTER_PROTOCOL_VERSION);
+  }
 };
 
 TEST_F(ClusterMasterTest, NoPacksMeansUpdatingStatus) {
@@ -137,10 +149,8 @@ TEST_F(ClusterMasterTest, PermissionBitmapZeroOnVoltageSpread) {
 
 TEST_F(ClusterMasterTest, PermissionBitmapSetWhenAllOk) {
   user_selected_cluster_expected_pack_count = 2;
-  send_frame0(1, 4000, 0, 5000, ACTIVE, 1);
-  send_frame3(1, 30000, 15000);
-  send_frame0(2, 4010, 0, 5000, ACTIVE, 1);
-  send_frame3(2, 30000, 15000);
+  bring_up_pack(1, 4000);
+  bring_up_pack(2, 4010);
   master->update_values();
   // Bits 0 and 1 set = packs 1 and 2 alive and permitted
   EXPECT_EQ(master->current_permission_bitmap(), 0x03);
@@ -158,10 +168,8 @@ TEST_F(ClusterMasterTest, PermissionBitmapZeroOnFault) {
 
 TEST_F(ClusterMasterTest, PermissionBitmapClearsAfterPackTimeout) {
   user_selected_cluster_expected_pack_count = 2;
-  send_frame0(1, 4000, 0, 5000, ACTIVE, 1);
-  send_frame3(1, 30000, 15000);
-  send_frame0(2, 4000, 0, 5000, ACTIVE, 1);
-  send_frame3(2, 30000, 15000);
+  bring_up_pack(1, 4000);
+  bring_up_pack(2, 4000);
   master->update_values();
   EXPECT_EQ(master->current_permission_bitmap(), 0x03);
 
@@ -174,10 +182,54 @@ TEST_F(ClusterMasterTest, PermissionBitmapClearsAfterPackTimeout) {
 TEST_F(ClusterMasterTest, PermissionAtExactThresholdAllowed) {
   user_selected_cluster_expected_pack_count = 2;
   // Spread = exactly 15 dV (1.5V) — at threshold, should still be permitted
-  send_frame0(1, 4000, 0, 5000, ACTIVE, 1);
-  send_frame3(1, 30000, 15000);
-  send_frame0(2, 4015, 0, 5000, ACTIVE, 1);
-  send_frame3(2, 30000, 15000);
+  bring_up_pack(1, 4000);
+  bring_up_pack(2, 4015);
   master->update_values();
   EXPECT_EQ(master->current_permission_bitmap(), 0x03);
+}
+
+// v3 protocol version tests
+
+TEST_F(ClusterMasterTest, PermissionBitmapZeroWhenSatelliteHasNotSentVersion) {
+  user_selected_cluster_expected_pack_count = 2;
+  // Send everything EXCEPT frame 5 — packs are alive but version_seen=false.
+  send_frame0(1, 4000, 0, 5000, ACTIVE, 1);
+  send_frame3(1, 30000, 15000);
+  send_frame0(2, 4000, 0, 5000, ACTIVE, 1);
+  send_frame3(2, 30000, 15000);
+  master->update_values();
+  EXPECT_EQ(master->current_permission_bitmap(), 0);
+}
+
+TEST_F(ClusterMasterTest, PermissionBitmapZeroOnVersionMismatch) {
+  user_selected_cluster_expected_pack_count = 2;
+  bring_up_pack(1, 4000);
+  // Pack 2 announces a future incompatible version
+  send_frame0(2, 4000, 0, 5000, ACTIVE, 1);
+  send_frame3(2, 30000, 15000);
+  send_frame5(2, /*protocol_version*/ 99);
+  master->update_values();
+  EXPECT_EQ(master->current_permission_bitmap(), 0);
+}
+
+TEST_F(ClusterMasterTest, VersionMismatchRaisesEvent) {
+  user_selected_cluster_expected_pack_count = 2;
+  bring_up_pack(1, 4000);
+  send_frame0(2, 4000, 0, 5000, ACTIVE, 1);
+  send_frame3(2, 30000, 15000);
+  send_frame5(2, /*protocol_version*/ 99);
+  master->update_values();
+  EXPECT_EQ(get_event_pointer(EVENT_CLUSTER_PROTOCOL_VERSION_MISMATCH)->state, EVENT_STATE_ACTIVE);
+}
+
+TEST_F(ClusterMasterTest, MismatchedPackPoisonsEntireCluster) {
+  // Strict semantics: one pack with the wrong version is treated as a system-wide
+  // trust failure, so even healthy packs with the right version lose permission.
+  user_selected_cluster_expected_pack_count = 2;
+  bring_up_pack(1, 4000);  // pack 1: correct version
+  send_frame0(2, 4000, 0, 5000, ACTIVE, 1);
+  send_frame3(2, 30000, 15000);
+  send_frame5(2, /*protocol_version*/ 42);  // pack 2: wrong version
+  master->update_values();
+  EXPECT_EQ(master->current_permission_bitmap(), 0);
 }

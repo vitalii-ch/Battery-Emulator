@@ -30,6 +30,7 @@ class ClusterCanBattery : public CanBattery {
  private:
   cluster_protocol::PackSnapshot packs[cluster_protocol::MAX_PACKS] = {};
   bool insufficient_packs_event_active = false;
+  bool protocol_version_mismatch_event_active = false;
   ClusterHtmlRenderer html_renderer{*this};
 
   // v2 contactor permission state
@@ -48,6 +49,7 @@ class ClusterCanBattery : public CanBattery {
   void update_alive_flags(uint32_t now_ms);
   void check_voltage_divergence(const cluster_protocol::AggregateResult& r);
   void check_topology_consistency();
+  void check_protocol_versions();
   void apply_to_datalayer(const cluster_protocol::AggregateResult& r);
   uint8_t compute_permission_bitmap(const cluster_protocol::AggregateResult& r) const;
 };

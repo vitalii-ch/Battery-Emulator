@@ -13,12 +13,18 @@ constexpr uint8_t MAX_PACKS = 8;
 constexpr uint8_t MIN_VALID_PACK_ID = 1;
 constexpr uint8_t MAX_VALID_PACK_ID = 8;
 
+// Cluster wire-format protocol version. Bumped only on incompatible
+// frame layout / semantic changes. Both master and satellite refuse to
+// interoperate when versions differ.
+constexpr uint8_t CLUSTER_PROTOCOL_VERSION = 1;
+
 // Frame base IDs (lower nibble = pack_id)
 constexpr uint16_t FRAME0_BASE = 0x500;  // Live status
 constexpr uint16_t FRAME1_BASE = 0x510;  // Limits + cells
 constexpr uint16_t FRAME2_BASE = 0x520;  // Temp + state
 constexpr uint16_t FRAME3_BASE = 0x530;  // Capacity
 constexpr uint16_t FRAME4_BASE = 0x540;  // Static info
+constexpr uint16_t FRAME5_BASE = 0x550;  // Protocol/node info
 
 // Transmit periods (ms)
 constexpr uint32_t FRAME0_PERIOD_MS = 100;
@@ -26,6 +32,7 @@ constexpr uint32_t FRAME1_PERIOD_MS = 200;
 constexpr uint32_t FRAME2_PERIOD_MS = 500;
 constexpr uint32_t FRAME3_PERIOD_MS = 1000;
 constexpr uint32_t FRAME4_PERIOD_MS = 5000;
+constexpr uint32_t FRAME5_PERIOD_MS = 5000;
 
 // Master-side timeouts/thresholds
 constexpr uint32_t PACK_TIMEOUT_MS = 1000;
@@ -85,6 +92,10 @@ struct PackSnapshot {
   uint16_t max_cell_voltage_limit_mV;
   uint8_t  chemistry;
   uint8_t  number_of_cells;
+
+  // Frame 5 (protocol info)
+  uint8_t  protocol_version;       // 0 = not yet received from this satellite
+  bool     protocol_version_seen;
 };
 
 // Encode helpers (satellite-side) — write 8 bytes into provided buffer
@@ -97,6 +108,7 @@ void encode_frame2(uint8_t buf[8], int16_t temp_max_dC, int16_t temp_min_dC,
 void encode_frame3(uint8_t buf[8], uint32_t total_Wh, uint32_t remaining_Wh);
 void encode_frame4(uint8_t buf[8], uint16_t max_design_voltage_dV, uint16_t min_design_voltage_dV,
                    uint16_t max_cell_voltage_limit_mV, uint8_t chemistry, uint8_t number_of_cells);
+void encode_frame5(uint8_t buf[8], uint8_t protocol_version);
 
 // Decode helpers (master-side) — read 8 bytes into snapshot fields
 void decode_frame0(const uint8_t buf[8], PackSnapshot& s);
@@ -104,12 +116,14 @@ void decode_frame1(const uint8_t buf[8], PackSnapshot& s);
 void decode_frame2(const uint8_t buf[8], PackSnapshot& s);
 void decode_frame3(const uint8_t buf[8], PackSnapshot& s);
 void decode_frame4(const uint8_t buf[8], PackSnapshot& s);
+void decode_frame5(const uint8_t buf[8], PackSnapshot& s);
 
 // Master → satellites permission frame.
 // Bit i (0..MAX_PACKS-1) means pack (i+1) may close its main contactor.
-void encode_permissions(uint8_t buf[8], uint8_t permission_bitmap, uint8_t seq);
-// Returns the permission bitmap (byte 0); seq is byte 1.
-void decode_permissions(const uint8_t buf[8], uint8_t& permission_bitmap, uint8_t& seq);
+// master_protocol_version goes into byte 2 so satellites can refuse to obey
+// permission bits when their own protocol version disagrees with master's.
+void encode_permissions(uint8_t buf[8], uint8_t permission_bitmap, uint8_t seq, uint8_t master_protocol_version);
+void decode_permissions(const uint8_t buf[8], uint8_t& permission_bitmap, uint8_t& seq, uint8_t& master_protocol_version);
 
 // Aggregation result — fields populated by aggregate() from alive packs
 struct AggregateResult {

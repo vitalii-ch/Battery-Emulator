@@ -98,26 +98,29 @@ TEST(ClusterProtocol, Frame0LittleEndianLayout) {
 
 TEST(ClusterProtocol, EncodeDecodePermissionsRoundtrip) {
   uint8_t buf[8] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-  encode_permissions(buf, /*bitmap*/ 0x5A, /*seq*/ 99);
+  encode_permissions(buf, /*bitmap*/ 0x5A, /*seq*/ 99, /*master_version*/ 1);
   uint8_t bitmap = 0;
   uint8_t seq = 0;
-  decode_permissions(buf, bitmap, seq);
+  uint8_t version = 0;
+  decode_permissions(buf, bitmap, seq, version);
   EXPECT_EQ(bitmap, 0x5A);
   EXPECT_EQ(seq, 99);
+  EXPECT_EQ(version, 1);
 }
 
 TEST(ClusterProtocol, EncodePermissionsLayout) {
   uint8_t buf[8] = {0};
-  encode_permissions(buf, /*bitmap*/ 0xA3, /*seq*/ 7);
+  encode_permissions(buf, /*bitmap*/ 0xA3, /*seq*/ 7, /*master_version*/ 1);
   EXPECT_EQ(buf[0], 0xA3);
   EXPECT_EQ(buf[1], 7);
-  // Reserved bytes must be zeroed
-  for (int i = 2; i < 8; ++i) EXPECT_EQ(buf[i], 0) << "reserved byte " << i;
+  EXPECT_EQ(buf[2], 1);
+  // Remaining reserved bytes must be zeroed
+  for (int i = 3; i < 8; ++i) EXPECT_EQ(buf[i], 0) << "reserved byte " << i;
 }
 
 TEST(ClusterProtocol, PermissionFrameIdConstants) {
-  // Sanity: 0x5F0 doesn't collide with satellite frame IDs (0x501..0x548)
-  EXPECT_GT(MASTER_PERMISSIONS_FRAME_ID, FRAME4_BASE + MAX_VALID_PACK_ID);
+  // Sanity: 0x5F0 doesn't collide with satellite frame IDs (0x501..0x558)
+  EXPECT_GT(MASTER_PERMISSIONS_FRAME_ID, FRAME5_BASE + MAX_VALID_PACK_ID);
   EXPECT_EQ(MASTER_PERMISSIONS_FRAME_ID, 0x5F0);
 }
 
@@ -125,4 +128,28 @@ TEST(ClusterProtocol, PermissionThresholdsHaveSensibleOrder) {
   // Strict gate must be tighter than warning event
   EXPECT_LT(CONTACTOR_CLOSE_VOLTAGE_THRESHOLD_DV, VOLTAGE_DIVERGENCE_THRESHOLD_DV);
   EXPECT_GT(MASTER_HEARTBEAT_TIMEOUT_MS, MASTER_PERMISSIONS_PERIOD_MS);
+}
+
+TEST(ClusterProtocol, EncodeDecodeFrame5Roundtrip) {
+  uint8_t buf[8] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+  encode_frame5(buf, /*protocol_version*/ 1);
+  EXPECT_EQ(buf[0], 1);
+  // Reserved bytes zeroed
+  for (int i = 1; i < 8; ++i) EXPECT_EQ(buf[i], 0) << "reserved byte " << i;
+
+  PackSnapshot s = {};
+  decode_frame5(buf, s);
+  EXPECT_EQ(s.protocol_version, 1);
+  EXPECT_TRUE(s.protocol_version_seen);
+}
+
+TEST(ClusterProtocol, ProtocolVersionConstantIs1) {
+  // v3 is the first wire-format release. Bumping this constant means the
+  // protocol changed in an incompatible way; bump it deliberately.
+  EXPECT_EQ(CLUSTER_PROTOCOL_VERSION, 1);
+}
+
+TEST(ClusterProtocol, Frame5BaseDoesNotCollideWith0x5F0) {
+  // Frame 5 occupies 0x551..0x558; permissions frame is 0x5F0 — gap is fine.
+  EXPECT_LT(FRAME5_BASE + MAX_VALID_PACK_ID, MASTER_PERMISSIONS_FRAME_ID);
 }

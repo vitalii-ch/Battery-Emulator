@@ -37,8 +37,11 @@ void ClusterCanBattery::handle_incoming_can_frame(CAN_frame rx_frame) {
   } else if (is_frame_for_base(id, FRAME4_BASE)) {
     pack_id = pack_id_from_frame(id, FRAME4_BASE);
     decoder = decode_frame4;
+  } else if (is_frame_for_base(id, FRAME5_BASE)) {
+    pack_id = pack_id_from_frame(id, FRAME5_BASE);
+    decoder = decode_frame5;
   } else if (id == FRAME0_BASE || id == FRAME1_BASE || id == FRAME2_BASE
-             || id == FRAME3_BASE || id == FRAME4_BASE) {
+             || id == FRAME3_BASE || id == FRAME4_BASE || id == FRAME5_BASE) {
     // pack_id = 0 sentinel — unconfigured satellite
     set_event(EVENT_CLUSTER_UNCONFIGURED_PACK, 0);
     return;
@@ -189,6 +192,7 @@ void ClusterCanBattery::update_values() {
 
   check_voltage_divergence(r);
   check_topology_consistency();
+  check_protocol_versions();
   apply_to_datalayer(r);
 
   // v2: compute per-pack contactor permission bitmap.
@@ -208,19 +212,56 @@ uint8_t ClusterCanBattery::compute_permission_bitmap(const AggregateResult& r) c
     uint16_t spread = r.voltage_max_dV - r.voltage_min_dV;
     if (spread > CONTACTOR_CLOSE_VOLTAGE_THRESHOLD_DV) return 0;
   }
-  // All cluster-level conditions OK; permit each individually-alive pack.
+  // Strict version-mismatch check: a single pack reporting an incompatible
+  // CLUSTER_PROTOCOL_VERSION makes the whole cluster untrusted (someone
+  // deployed wrong firmware, or wire faults are corrupting frames). Refuse
+  // permission to ALL packs until the situation is resolved by a human.
+  for (uint8_t i = 0; i < MAX_PACKS; ++i) {
+    if (!packs[i].alive) continue;
+    if (!packs[i].protocol_version_seen) continue;  // not yet known — wait
+    if (packs[i].protocol_version != CLUSTER_PROTOCOL_VERSION) return 0;
+  }
+  // Permit each alive pack that has fully introduced itself (received Frame 5
+  // with matching version). A pack that hasn't yet emitted Frame 5 is held
+  // back from permission until its first Frame 5 arrives (≤ 5s after boot).
   uint8_t bitmap = 0;
   for (uint8_t i = 0; i < MAX_PACKS; ++i) {
-    if (packs[i].alive) bitmap |= (uint8_t)(1u << i);
+    if (!packs[i].alive) continue;
+    if (!packs[i].protocol_version_seen) continue;
+    bitmap |= (uint8_t)(1u << i);
   }
   return bitmap;
+}
+
+void ClusterCanBattery::check_protocol_versions() {
+  // Raise (or clear) EVENT_CLUSTER_PROTOCOL_VERSION_MISMATCH based on whether
+  // any alive pack has reported an incompatible version.
+  bool any_mismatch = false;
+  uint8_t worst_pack_id = 0;
+  for (uint8_t i = 0; i < MAX_PACKS; ++i) {
+    if (!packs[i].alive) continue;
+    if (!packs[i].protocol_version_seen) continue;  // not yet known
+    if (packs[i].protocol_version != CLUSTER_PROTOCOL_VERSION) {
+      any_mismatch = true;
+      worst_pack_id = (uint8_t)(i + 1);
+      break;
+    }
+  }
+  if (any_mismatch && !protocol_version_mismatch_event_active) {
+    set_event(EVENT_CLUSTER_PROTOCOL_VERSION_MISMATCH, worst_pack_id);
+    protocol_version_mismatch_event_active = true;
+  } else if (!any_mismatch && protocol_version_mismatch_event_active) {
+    clear_event(EVENT_CLUSTER_PROTOCOL_VERSION_MISMATCH);
+    protocol_version_mismatch_event_active = false;
+  }
 }
 
 void ClusterCanBattery::transmit_can(unsigned long currentMillis) {
   if (currentMillis - previousMillis_permissions >= MASTER_PERMISSIONS_PERIOD_MS) {
     previousMillis_permissions = currentMillis;
     permissions_seq++;
-    encode_permissions(tx_permissions_frame.data.u8, latest_permission_bitmap, permissions_seq);
+    encode_permissions(tx_permissions_frame.data.u8, latest_permission_bitmap,
+                       permissions_seq, CLUSTER_PROTOCOL_VERSION);
     transmit_can_frame(&tx_permissions_frame);
   }
 }

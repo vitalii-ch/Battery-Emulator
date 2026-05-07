@@ -144,6 +144,7 @@ void init_events(void) {
   events.entries[EVENT_CLUSTER_VOLTAGE_DIVERGENCE].level = EVENT_LEVEL_WARNING;
   events.entries[EVENT_CLUSTER_INSUFFICIENT_PACKS].level = EVENT_LEVEL_ERROR;
   events.entries[EVENT_CLUSTER_TOPOLOGY_MISMATCH].level = EVENT_LEVEL_ERROR;
+  events.entries[EVENT_CLUSTER_PROTOCOL_VERSION_MISMATCH].level = EVENT_LEVEL_ERROR;
 }
 
 void set_event(EVENTS_ENUM_TYPE event, uint8_t data) {
@@ -415,6 +416,9 @@ String get_event_message_string(EVENTS_ENUM_TYPE event) {
       return "Cluster insufficient packs: fewer alive packs than expected. Cluster set to FAULT, charge/discharge disabled.";
     case EVENT_CLUSTER_TOPOLOGY_MISMATCH:
       return "Cluster topology mismatch: satellite packs report different chemistry or cell count.";
+    case EVENT_CLUSTER_PROTOCOL_VERSION_MISMATCH:
+      return "Cluster protocol version mismatch: a node is running an incompatible cluster protocol version. "
+             "Update master and all satellites to the same firmware build.";
     case EVENT_GPIO_NOT_DEFINED:
       return "Missing GPIO Assignment: The component '" + esp32hal->failed_allocator() +
              "' requires a GPIO pin that isn't configured. Please define a valid pin number in your settings.";

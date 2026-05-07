@@ -100,10 +100,20 @@ void decode_frame4(const uint8_t buf[8], PackSnapshot& s) {
   s.number_of_cells = buf[7];
 }
 
-void encode_permissions(uint8_t buf[8], uint8_t permission_bitmap, uint8_t seq) {
+void encode_frame5(uint8_t buf[8], uint8_t protocol_version) {
+  buf[0] = protocol_version;
+  for (int i = 1; i < 8; ++i) buf[i] = 0;
+}
+
+void decode_frame5(const uint8_t buf[8], PackSnapshot& s) {
+  s.protocol_version = buf[0];
+  s.protocol_version_seen = true;
+}
+
+void encode_permissions(uint8_t buf[8], uint8_t permission_bitmap, uint8_t seq, uint8_t master_protocol_version) {
   buf[0] = permission_bitmap;
   buf[1] = seq;
-  buf[2] = 0;
+  buf[2] = master_protocol_version;
   buf[3] = 0;
   buf[4] = 0;
   buf[5] = 0;
@@ -111,9 +121,10 @@ void encode_permissions(uint8_t buf[8], uint8_t permission_bitmap, uint8_t seq) 
   buf[7] = 0;
 }
 
-void decode_permissions(const uint8_t buf[8], uint8_t& permission_bitmap, uint8_t& seq) {
+void decode_permissions(const uint8_t buf[8], uint8_t& permission_bitmap, uint8_t& seq, uint8_t& master_protocol_version) {
   permission_bitmap = buf[0];
   seq = buf[1];
+  master_protocol_version = buf[2];
 }
 
 // Worst-of priority for bms_status_enum:

@@ -1,6 +1,6 @@
 # Battery Cluster — масштабування паралельних пакетів через master/satellite
 
-**Status:** Design draft (v1 implemented; v2 contactor coordination — see end)
+**Status:** Design draft (v1 + v2 + v3 implemented; v3 = protocol versioning, see end)
 **Date:** 2026-05-07
 **Branch:** feature/master-slave-pair
 
@@ -389,6 +389,73 @@ Receive handler оновлює `last_permissions_bitmap` і `last_master_frame_m
 ### Hardware implications
 
 Скасовується вимога з v1: "external hardware керує контакторами з voltage matching". Достатньо стандартних BE-керованих контакторів на satellite (як у single-pack BE сьогодні): pre-charge resistor + main contactor pin, керовані `comm_contactorcontrol.cpp`. Кожен satellite використовує свою існуючу схему.
+
+## v3: Protocol versioning
+
+Додано explicit version negotiation, щоб у майбутньому при breaking-change у wire-format обидві сторони відмовлялись працювати замість тихого misinterpretation'у байтів.
+
+### Constant
+
+```cpp
+constexpr uint8_t CLUSTER_PROTOCOL_VERSION = 1;
+```
+
+Bumping rules:
+- **Bump** — будь-яка зміна layout існуючого фрейму, або зміна семантики поля (одиниці виміру, інтерпретація бітів)
+- **НЕ bump** — додавання нових фреймів, заповнення reserved байтів новим змістом (старші версії ігнорують)
+- **НЕ bump** — зміни логіки на одній стороні (агрегаційні правила, voltage thresholds)
+
+### Satellite → Master: Frame 5
+
+Новий низькочастотний фрейм:
+
+```
+Frame 5 (0x55X) — Protocol info, every 5000 ms:
+  [0]   protocol_version  (uint8) — CLUSTER_PROTOCOL_VERSION at build time
+  [1-7] reserved (zero) — for future capability/feature flags
+```
+
+Base ID `0x550`, з offset'ом `+pack_id` (0x551..0x558). 7 reserved байтів — простір для майбутніх opt-in полів без bumping'а версії.
+
+### Master → Satellites: оновлений 0x5F0
+
+Використовуємо раніше зарезервований byte 2:
+
+```
+Frame 0x5F0 (updated):
+  [0]   permission_bitmap
+  [1]   sequence
+  [2]   master_protocol_version    ← v3
+  [3-7] reserved
+```
+
+Жодного нового frame ID на master-side — лише розширення існуючого.
+
+### Логіка перевірки
+
+**Master:**
+- При прийомі Frame 5 від pack — зберігає `protocol_version` та `protocol_version_seen=true` у `PackSnapshot`
+- `compute_permission_bitmap()` має додаткову (strict) перевірку: якщо хоч один alive pack має `protocol_version_seen=true && protocol_version != CLUSTER_PROTOCOL_VERSION` → bitmap = 0 (вся cluster без permission)
+- Pack що ще не надіслав Frame 5 — `protocol_version_seen=false` → не отримує permission, але не блокує інших (короткочасно при startup, до ~5s)
+- Якщо є mismatch → set_event(EVENT_CLUSTER_PROTOCOL_VERSION_MISMATCH)
+
+**Satellite:**
+- При прийомі 0x5F0 — читає byte 2 → `last_master_protocol_version`
+- `allows_contactor_closing()` повертає `false` якщо `last_master_protocol_version != CLUSTER_PROTOCOL_VERSION` (additional gate after pack_id check, master_seen, heartbeat timeout)
+- Якщо є mismatch → set_event(EVENT_CLUSTER_PROTOCOL_VERSION_MISMATCH)
+
+### Чому "strict" mode
+
+Будь-який version mismatch у кластері означає одне з:
+- Хтось деплойнув не той firmware на одну з нод
+- Wire fault corrupting frames
+- Software bug
+
+Безпечна реакція — **зупинити все**, бо ми не довіряємо стану. Кращий помилково-консервативний день, ніж runaway charge/discharge через misinterpreted поле.
+
+### Backwards compatibility
+
+Жодної. v3 — перший release з версіонуванням; нічого ще немає в полі. У майбутньому якщо буде v2: master і satellite з різними версіями просто не будуть працювати разом (deliberate). Користувач має оновити обидві сторони синхронно.
 
 ## Відкриті питання / майбутні розширення
 

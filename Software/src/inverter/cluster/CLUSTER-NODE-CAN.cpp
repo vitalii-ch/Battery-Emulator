@@ -2,6 +2,7 @@
 #include <Arduino.h>
 #include "../../battery/cluster/CLUSTER-PROTOCOL.h"
 #include "../../datalayer/datalayer.h"
+#include "../../devboard/utils/events.h"
 
 uint8_t user_selected_cluster_node_pack_id = 0;
 
@@ -15,6 +16,7 @@ void ClusterNodeCanInverter::update_values() {
   tx_frame2.ID = frame_id(FRAME2_BASE, pack_id);
   tx_frame3.ID = frame_id(FRAME3_BASE, pack_id);
   tx_frame4.ID = frame_id(FRAME4_BASE, pack_id);
+  tx_frame5.ID = frame_id(FRAME5_BASE, pack_id);
 
   encode_frame0(tx_frame0.data.u8,
                 datalayer.battery.status.voltage_dV,
@@ -42,6 +44,7 @@ void ClusterNodeCanInverter::update_values() {
                 datalayer.battery.info.max_cell_voltage_mV,
                 (uint8_t)datalayer.battery.info.chemistry,
                 datalayer.battery.info.number_of_cells);
+  encode_frame5(tx_frame5.data.u8, CLUSTER_PROTOCOL_VERSION);
 }
 
 void ClusterNodeCanInverter::transmit_can(unsigned long currentMillis) {
@@ -67,13 +70,28 @@ void ClusterNodeCanInverter::transmit_can(unsigned long currentMillis) {
     previousMillis_frame4 = currentMillis;
     transmit_can_frame(&tx_frame4);
   }
+  if (currentMillis - previousMillis_frame5 >= FRAME5_PERIOD_MS) {
+    previousMillis_frame5 = currentMillis;
+    transmit_can_frame(&tx_frame5);
+  }
 }
 
 void ClusterNodeCanInverter::map_can_frame_to_variable(CAN_frame rx_frame) {
   if (rx_frame.ID == MASTER_PERMISSIONS_FRAME_ID) {
-    decode_permissions(rx_frame.data.u8, last_permissions_bitmap, last_master_seq);
+    decode_permissions(rx_frame.data.u8, last_permissions_bitmap, last_master_seq,
+                       last_master_protocol_version);
     last_master_frame_ms = millis();
     master_seen_ever = true;
+
+    // Raise/clear the version-mismatch event based on what master is reporting.
+    bool mismatch = (last_master_protocol_version != CLUSTER_PROTOCOL_VERSION);
+    if (mismatch && !protocol_version_mismatch_event_active) {
+      set_event(EVENT_CLUSTER_PROTOCOL_VERSION_MISMATCH, last_master_protocol_version);
+      protocol_version_mismatch_event_active = true;
+    } else if (!mismatch && protocol_version_mismatch_event_active) {
+      clear_event(EVENT_CLUSTER_PROTOCOL_VERSION_MISMATCH);
+      protocol_version_mismatch_event_active = false;
+    }
   }
 }
 
@@ -88,6 +106,10 @@ bool ClusterNodeCanInverter::allows_contactor_closing() {
   }
   if (millis() - last_master_frame_ms > MASTER_HEARTBEAT_TIMEOUT_MS) {
     // Master heartbeat lost — fail-safe open
+    return false;
+  }
+  if (last_master_protocol_version != CLUSTER_PROTOCOL_VERSION) {
+    // Master speaks a different protocol version — refuse to close.
     return false;
   }
   uint8_t bit_index = pack_id - 1;
