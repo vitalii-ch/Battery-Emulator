@@ -29,7 +29,13 @@ constexpr uint32_t FRAME4_PERIOD_MS = 5000;
 
 // Master-side timeouts/thresholds
 constexpr uint32_t PACK_TIMEOUT_MS = 1000;
-constexpr uint16_t VOLTAGE_DIVERGENCE_THRESHOLD_DV = 50;  // 5.0V
+constexpr uint16_t VOLTAGE_DIVERGENCE_THRESHOLD_DV = 50;          // 5.0V — soft warning event
+constexpr uint16_t CONTACTOR_CLOSE_VOLTAGE_THRESHOLD_DV = 15;     // 1.5V — strict contactor gate
+
+// Master → satellites permission frame (broadcast, single ID)
+constexpr uint16_t MASTER_PERMISSIONS_FRAME_ID = 0x5F0;
+constexpr uint32_t MASTER_PERMISSIONS_PERIOD_MS = 100;
+constexpr uint32_t MASTER_HEARTBEAT_TIMEOUT_MS = 1500;            // 15× period — satellite assumes false beyond this
 
 // Helpers
 constexpr uint16_t frame_id(uint16_t base, uint8_t pack_id) { return base + pack_id; }
@@ -98,6 +104,12 @@ void decode_frame1(const uint8_t buf[8], PackSnapshot& s);
 void decode_frame2(const uint8_t buf[8], PackSnapshot& s);
 void decode_frame3(const uint8_t buf[8], PackSnapshot& s);
 void decode_frame4(const uint8_t buf[8], PackSnapshot& s);
+
+// Master → satellites permission frame.
+// Bit i (0..MAX_PACKS-1) means pack (i+1) may close its main contactor.
+void encode_permissions(uint8_t buf[8], uint8_t permission_bitmap, uint8_t seq);
+// Returns the permission bitmap (byte 0); seq is byte 1.
+void decode_permissions(const uint8_t buf[8], uint8_t& permission_bitmap, uint8_t& seq);
 
 // Aggregation result — fields populated by aggregate() from alive packs
 struct AggregateResult {

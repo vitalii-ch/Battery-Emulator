@@ -100,6 +100,22 @@ void decode_frame4(const uint8_t buf[8], PackSnapshot& s) {
   s.number_of_cells = buf[7];
 }
 
+void encode_permissions(uint8_t buf[8], uint8_t permission_bitmap, uint8_t seq) {
+  buf[0] = permission_bitmap;
+  buf[1] = seq;
+  buf[2] = 0;
+  buf[3] = 0;
+  buf[4] = 0;
+  buf[5] = 0;
+  buf[6] = 0;
+  buf[7] = 0;
+}
+
+void decode_permissions(const uint8_t buf[8], uint8_t& permission_bitmap, uint8_t& seq) {
+  permission_bitmap = buf[0];
+  seq = buf[1];
+}
+
 // Worst-of priority for bms_status_enum:
 // FAULT > UPDATING > STANDBY > INACTIVE > DARKSTART > ACTIVE > others
 static int bms_status_priority(uint8_t s) {
