@@ -1,7 +1,7 @@
 #include "CLUSTER-NODE-CAN.h"
 #include <Arduino.h>
-#include "../battery/CLUSTER-PROTOCOL.h"
-#include "../datalayer/datalayer.h"
+#include "../../battery/cluster/CLUSTER-PROTOCOL.h"
+#include "../../datalayer/datalayer.h"
 
 uint8_t user_selected_cluster_node_pack_id = 0;
 

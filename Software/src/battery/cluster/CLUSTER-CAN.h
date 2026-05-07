@@ -1,7 +1,7 @@
 #ifndef CLUSTER_CAN_H
 #define CLUSTER_CAN_H
 
-#include "CanBattery.h"
+#include "../CanBattery.h"
 #include "CLUSTER-PROTOCOL.h"
 #include "CLUSTER-HTML.h"
 

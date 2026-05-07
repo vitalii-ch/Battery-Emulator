@@ -1,5 +1,5 @@
 #include "CLUSTER-PROTOCOL.h"
-#include "../devboard/utils/types.h"
+#include "../../devboard/utils/types.h"
 #include <climits>
 
 namespace cluster_protocol {

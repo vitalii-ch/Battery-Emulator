@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
-#include "../Software/src/battery/CLUSTER-CAN.h"
-#include "../Software/src/battery/CLUSTER-PROTOCOL.h"
+#include "../Software/src/battery/cluster/CLUSTER-CAN.h"
+#include "../Software/src/battery/cluster/CLUSTER-PROTOCOL.h"
 #include "../Software/src/datalayer/datalayer.h"
 #include "../Software/src/devboard/utils/events.h"
 

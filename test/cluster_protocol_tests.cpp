@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "../Software/src/battery/CLUSTER-PROTOCOL.h"
+#include "../Software/src/battery/cluster/CLUSTER-PROTOCOL.h"
 
 using namespace cluster_protocol;
 

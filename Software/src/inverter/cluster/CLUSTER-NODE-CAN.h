@@ -1,7 +1,7 @@
 #ifndef CLUSTER_NODE_CAN_H
 #define CLUSTER_NODE_CAN_H
 
-#include "CanInverterProtocol.h"
+#include "../CanInverterProtocol.h"
 
 class ClusterNodeCanInverter : public CanInverterProtocol {
  public:

@@ -1,7 +1,7 @@
 #include "CLUSTER-CAN.h"
 #include <Arduino.h>
-#include "../datalayer/datalayer.h"
-#include "../devboard/utils/events.h"
+#include "../../datalayer/datalayer.h"
+#include "../../devboard/utils/events.h"
 
 using namespace cluster_protocol;
 

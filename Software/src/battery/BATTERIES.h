@@ -64,7 +64,7 @@ void setup_shunt();
 #include "THUNDERSTRUCK-BMS.h"
 #include "VOLVO-SPA-BATTERY.h"
 #include "VOLVO-SPA-HYBRID-BATTERY.h"
-#include "CLUSTER-CAN.h"
+#include "cluster/CLUSTER-CAN.h"
 
 void setup_battery(void);
 Battery* create_battery(BatteryType type);

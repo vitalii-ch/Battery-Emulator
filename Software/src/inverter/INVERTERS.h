@@ -27,7 +27,7 @@ extern InverterProtocol* inverter;
 #include "SOLXPOW-CAN.h"
 #include "SUNGROW-CAN.h"
 #include "VCU-CAN.h"
-#include "CLUSTER-NODE-CAN.h"
+#include "cluster/CLUSTER-NODE-CAN.h"
 
 // Call to initialize the build-time selected inverter. Safe to call even though inverter was not selected.
 bool setup_inverter();

@@ -1,7 +1,7 @@
 #ifndef CLUSTER_HTML_H
 #define CLUSTER_HTML_H
 
-#include "../devboard/webserver/BatteryHtmlRenderer.h"
+#include "../../devboard/webserver/BatteryHtmlRenderer.h"
 
 class ClusterCanBattery;
 
