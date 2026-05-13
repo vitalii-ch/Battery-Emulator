@@ -57,7 +57,8 @@ enum class BatteryType {
   GeelySea = 50,
   ThunderstruckBMS = 51,
   EnnoidBMS = 52,
-  ClusterCan = 53,
+  StellantisSmallWide4x4 = 53,
+  ClusterCan = 54,
   Highest
 };
 

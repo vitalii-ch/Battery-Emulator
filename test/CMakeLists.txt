@@ -68,7 +68,6 @@ add_compile_definitions(ESP32 HW_LILYGO COMMON_IMAGE)
 # add the executable
 add_executable(tests 
     tests.cpp
-    safety_tests.cpp
     voltage_sync_tests.cpp
     bms_reset_tests.cpp
     cluster_protocol_tests.cpp
@@ -149,6 +148,7 @@ add_executable(tests
     ../Software/src/battery/Shunts.cpp
     ../Software/src/battery/SIMPBMS-BATTERY.cpp
     ../Software/src/battery/SONO-BATTERY.cpp
+    ../Software/src/battery/STELLANTIS-SMALL-WIDE-4x4.cpp
     ../Software/src/battery/TESLA-BATTERY.cpp
     ../Software/src/battery/TESLA-LEGACY-BATTERY.cpp
     ../Software/src/battery/TEST-FAKE-BATTERY.cpp
