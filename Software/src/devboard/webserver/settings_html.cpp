@@ -1325,7 +1325,7 @@ const char* getCANInterfaceName(CAN_Interface interface) {
     }
 
     form .if-cluster-master { display: none; }
-    form[data-battery="53"] .if-cluster-master {
+    form[data-battery="54"] .if-cluster-master {
       display: contents;
     }
 
@@ -1531,8 +1531,8 @@ const char* getCANInterfaceName(CAN_Interface interface) {
         </div>
 
         <div class="if-cluster-node">
-        <label>Cluster Pack ID (1-8): </label>
-        <input name='CLSTPACKID' type='number' min='1' max='8' value="%CLSTPACKID%"
+        <label>Cluster Pack ID (1-8, 0 = unconfigured): </label>
+        <input name='CLSTPACKID' type='number' min='0' max='8' value="%CLSTPACKID%"
         title="Unique pack identifier for this satellite on the cluster CAN bus. Each satellite must have a different ID. 0 = unconfigured (will trigger alarm)." />
         </div>
 
