@@ -10,8 +10,7 @@ void check_parallel_battery_safety(uint8_t batteryNumber) {
     //    parser sets to CAN_STILL_ALIVE on each frame)
     //  - both voltages must be non-zero (update_values() runs before this tick;
     //    voltage_dV is 0 until the first 0x132 frame arrives)
-    if (!datalayer.battery.status.CAN_battery_still_alive ||
-        !datalayer.battery2.status.CAN_battery_still_alive ||
+    if (!datalayer.battery.status.CAN_battery_still_alive || !datalayer.battery2.status.CAN_battery_still_alive ||
         datalayer.battery.status.voltage_dV == 0 || datalayer.battery2.status.voltage_dV == 0) {
       datalayer.system.status.battery2_allowed_contactor_closing = false;
       return;
@@ -51,8 +50,7 @@ void check_parallel_battery_safety(uint8_t batteryNumber) {
 
   if (batteryNumber == 3) {
     // Mirror the battery2 guards.
-    if (!datalayer.battery.status.CAN_battery_still_alive ||
-        !datalayer.battery3.status.CAN_battery_still_alive ||
+    if (!datalayer.battery.status.CAN_battery_still_alive || !datalayer.battery3.status.CAN_battery_still_alive ||
         datalayer.battery.status.voltage_dV == 0 || datalayer.battery3.status.voltage_dV == 0) {
       datalayer.system.status.battery3_allowed_contactor_closing = false;
       return;

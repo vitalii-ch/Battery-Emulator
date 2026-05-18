@@ -29,30 +29,21 @@ class TeslaHtmlRenderer : public BatteryHtmlRenderer {
     float dcdcLvBusVolt = static_cast<float>(tesla->battery_dcdcLvBusVolt) * 0.0390625f;
     float dcdcHvBusVolt = static_cast<float>(tesla->battery_dcdcHvBusVolt) * 0.146484f;
     float dcdcLvOutputCurrent = static_cast<float>(tesla->battery_dcdcLvOutputCurrent) * 0.1f;
-    float nominal_full_pack_energy =
-        static_cast<float>(tesla->battery_nominal_full_pack_energy) * 0.1f;
-    float nominal_full_pack_energy_m0 =
-        static_cast<float>(tesla->battery_nominal_full_pack_energy_m0) * 0.02f;
-    float nominal_energy_remaining =
-        static_cast<float>(tesla->battery_nominal_energy_remaining) * 0.1f;
-    float nominal_energy_remaining_m0 =
-        static_cast<float>(tesla->battery_nominal_energy_remaining_m0) * 0.02f;
+    float nominal_full_pack_energy = static_cast<float>(tesla->battery_nominal_full_pack_energy) * 0.1f;
+    float nominal_full_pack_energy_m0 = static_cast<float>(tesla->battery_nominal_full_pack_energy_m0) * 0.02f;
+    float nominal_energy_remaining = static_cast<float>(tesla->battery_nominal_energy_remaining) * 0.1f;
+    float nominal_energy_remaining_m0 = static_cast<float>(tesla->battery_nominal_energy_remaining_m0) * 0.02f;
     float ideal_energy_remaining = static_cast<float>(tesla->battery_ideal_energy_remaining) * 0.1f;
-    float ideal_energy_remaining_m0 =
-        static_cast<float>(tesla->battery_ideal_energy_remaining_m0) * 0.02f;
-    float energy_to_charge_complete =
-        static_cast<float>(tesla->battery_energy_to_charge_complete) * 0.1f;
-    float energy_to_charge_complete_m1 =
-        static_cast<float>(tesla->battery_energy_to_charge_complete_m1) * 0.02f;
+    float ideal_energy_remaining_m0 = static_cast<float>(tesla->battery_ideal_energy_remaining_m0) * 0.02f;
+    float energy_to_charge_complete = static_cast<float>(tesla->battery_energy_to_charge_complete) * 0.1f;
+    float energy_to_charge_complete_m1 = static_cast<float>(tesla->battery_energy_to_charge_complete_m1) * 0.02f;
     float energy_buffer = static_cast<float>(tesla->battery_energy_buffer) * 0.1f;
     float energy_buffer_m1 = static_cast<float>(tesla->battery_energy_buffer_m1) * 0.01f;
-    float expected_energy_remaining_m1 =
-        static_cast<float>(tesla->battery_expected_energy_remaining_m1) * 0.02f;
+    float expected_energy_remaining_m1 = static_cast<float>(tesla->battery_expected_energy_remaining_m1) * 0.02f;
     float total_discharge = static_cast<float>(battery->status.total_discharged_battery_Wh) * 0.001f;
     float total_charge = static_cast<float>(battery->status.total_charged_battery_Wh) * 0.001f;
     float packMass = static_cast<float>(tesla->battery_packMass);
-    float platformMaxBusVoltage =
-        static_cast<float>(tesla->battery_platformMaxBusVoltage) * 0.1f + 375;
+    float platformMaxBusVoltage = static_cast<float>(tesla->battery_platformMaxBusVoltage) * 0.1f + 375;
     float bms_min_voltage = static_cast<float>(tesla->BMS_min_voltage) * 0.01f * 2;
     float bms_max_voltage = static_cast<float>(tesla->BMS_max_voltage) * 0.01f * 2;
     float max_charge_current = static_cast<float>(tesla->battery_max_charge_current);
@@ -66,8 +57,7 @@ class TeslaHtmlRenderer : public BatteryHtmlRenderer {
     //float BrickModelTMax = static_cast<float>(tesla->battery_BrickModelTMax) * 0.5 - 40;
     //float BrickModelTMin = static_cast<float>(tesla->battery_BrickModelTMin) * 0.5 - 40;
     float isolationResistance = static_cast<float>(tesla->BMS_isolationResistance) * 10;
-    float PCS_dcdcMaxOutputCurrentAllowed =
-        static_cast<float>(tesla->PCS_dcdcMaxOutputCurrentAllowed) * 0.1f;
+    float PCS_dcdcMaxOutputCurrentAllowed = static_cast<float>(tesla->PCS_dcdcMaxOutputCurrentAllowed) * 0.1f;
     float PCS_dcdcTemp = static_cast<float>(tesla->PCS_dcdcTemp) * 0.1f + 40.0f;
     float PCS_ambientTemp = static_cast<float>(tesla->PCS_ambientTemp) * 0.1f + 40.0f;
     float PCS_chgPhATemp = static_cast<float>(tesla->PCS_chgPhATemp) * 0.1f + 40.0f;
@@ -79,20 +69,16 @@ class TeslaHtmlRenderer : public BatteryHtmlRenderer {
     //float BMS_hvacPowerBudget = static_cast<float>(tesla->BMS_hvacPowerBudget) * 0.02;
     float BMS_powerDissipation = static_cast<float>(tesla->BMS_powerDissipation) * 0.02f;
     float BMS_flowRequest = static_cast<float>(tesla->BMS_flowRequest) * 0.3f;
-    float BMS_inletActiveCoolTargetT =
-        static_cast<float>(tesla->BMS_inletActiveCoolTargetT) * 0.25f - 25;
+    float BMS_inletActiveCoolTargetT = static_cast<float>(tesla->BMS_inletActiveCoolTargetT) * 0.25f - 25;
     float BMS_inletPassiveTargetT = static_cast<float>(tesla->BMS_inletPassiveTargetT) * 0.25f - 25;
-    float BMS_inletActiveHeatTargetT =
-        static_cast<float>(tesla->BMS_inletActiveHeatTargetT) * 0.25f - 25;
+    float BMS_inletActiveHeatTargetT = static_cast<float>(tesla->BMS_inletActiveHeatTargetT) * 0.25f - 25;
     float BMS_packTMin = static_cast<float>(tesla->BMS_packTMin) * 0.25f - 25;
     float BMS_packTMax = static_cast<float>(tesla->BMS_packTMax) * 0.25f - 25;
     float PCS_dcdcMaxLvOutputCurrent = static_cast<float>(tesla->PCS_dcdcMaxLvOutputCurrent) * 0.1f;
     float PCS_dcdcCurrentLimit = static_cast<float>(tesla->PCS_dcdcCurrentLimit) * 0.1f;
-    float PCS_dcdcLvOutputCurrentTempLimit =
-        static_cast<float>(tesla->PCS_dcdcLvOutputCurrentTempLimit) * 0.1f;
+    float PCS_dcdcLvOutputCurrentTempLimit = static_cast<float>(tesla->PCS_dcdcLvOutputCurrentTempLimit) * 0.1f;
     float PCS_dcdcUnifiedCommand = static_cast<float>(tesla->PCS_dcdcUnifiedCommand) * 0.001f;
-    float PCS_dcdcCLAControllerOutput =
-        static_cast<float>(tesla->PCS_dcdcCLAControllerOutput * 0.001f);
+    float PCS_dcdcCLAControllerOutput = static_cast<float>(tesla->PCS_dcdcCLAControllerOutput * 0.001f);
     float PCS_dcdcTankVoltage = static_cast<float>(tesla->PCS_dcdcTankVoltage);
     float PCS_dcdcTankVoltageTarget = static_cast<float>(tesla->PCS_dcdcTankVoltageTarget);
     float PCS_dcdcClaCurrentFreq = static_cast<float>(tesla->PCS_dcdcClaCurrentFreq) * 0.0976563f;
@@ -100,21 +86,14 @@ class TeslaHtmlRenderer : public BatteryHtmlRenderer {
     float PCS_dcdcShortTimeUs = static_cast<float>(tesla->PCS_dcdcShortTimeUs) * 0.000488281f;
     float PCS_dcdcHalfPeriodUs = static_cast<float>(tesla->PCS_dcdcHalfPeriodUs) * 0.000488281f;
     float PCS_dcdcIntervalMaxFrequency = static_cast<float>(tesla->PCS_dcdcIntervalMaxFrequency);
-    float PCS_dcdcIntervalMaxHvBusVolt =
-        static_cast<float>(tesla->PCS_dcdcIntervalMaxHvBusVolt) * 0.1f;
-    float PCS_dcdcIntervalMaxLvBusVolt =
-        static_cast<float>(tesla->PCS_dcdcIntervalMaxLvBusVolt) * 0.1f;
-    float PCS_dcdcIntervalMaxLvOutputCurr =
-        static_cast<float>(tesla->PCS_dcdcIntervalMaxLvOutputCurr);
+    float PCS_dcdcIntervalMaxHvBusVolt = static_cast<float>(tesla->PCS_dcdcIntervalMaxHvBusVolt) * 0.1f;
+    float PCS_dcdcIntervalMaxLvBusVolt = static_cast<float>(tesla->PCS_dcdcIntervalMaxLvBusVolt) * 0.1f;
+    float PCS_dcdcIntervalMaxLvOutputCurr = static_cast<float>(tesla->PCS_dcdcIntervalMaxLvOutputCurr);
     float PCS_dcdcIntervalMinFrequency = static_cast<float>(tesla->PCS_dcdcIntervalMinFrequency);
-    float PCS_dcdcIntervalMinHvBusVolt =
-        static_cast<float>(tesla->PCS_dcdcIntervalMinHvBusVolt) * 0.1f;
-    float PCS_dcdcIntervalMinLvBusVolt =
-        static_cast<float>(tesla->PCS_dcdcIntervalMinLvBusVolt) * 0.1f;
-    float PCS_dcdcIntervalMinLvOutputCurr =
-        static_cast<float>(tesla->PCS_dcdcIntervalMinLvOutputCurr);
-    float PCS_dcdc12vSupportLifetimekWh =
-        static_cast<float>(tesla->PCS_dcdc12vSupportLifetimekWh) * 0.01f;
+    float PCS_dcdcIntervalMinHvBusVolt = static_cast<float>(tesla->PCS_dcdcIntervalMinHvBusVolt) * 0.1f;
+    float PCS_dcdcIntervalMinLvBusVolt = static_cast<float>(tesla->PCS_dcdcIntervalMinLvBusVolt) * 0.1f;
+    float PCS_dcdcIntervalMinLvOutputCurr = static_cast<float>(tesla->PCS_dcdcIntervalMinLvOutputCurr);
+    float PCS_dcdc12vSupportLifetimekWh = static_cast<float>(tesla->PCS_dcdc12vSupportLifetimekWh) * 0.01f;
     float HVP_hvp1v5Ref = static_cast<float>(tesla->HVP_hvp1v5Ref) * 0.1f;
     float HVP_shuntCurrentDebug = static_cast<float>(tesla->HVP_shuntCurrentDebug) * 0.1f;
     float HVP_dcLinkVoltage = static_cast<float>(tesla->HVP_dcLinkVoltage) * 0.1f;
@@ -198,24 +177,21 @@ class TeslaHtmlRenderer : public BatteryHtmlRenderer {
 
     //Main battery info
     char readableBatterySerialNumber[15];  // One extra space for null terminator
-    memcpy(readableBatterySerialNumber, tesla->battery_serialNumber,
-           sizeof(tesla->battery_serialNumber));
+    memcpy(readableBatterySerialNumber, tesla->battery_serialNumber, sizeof(tesla->battery_serialNumber));
     readableBatterySerialNumber[14] = '\0';  // Null terminate the string
-    content += "<h4>Battery Serial Number: " +
-               String(readableBatterySerialNumber[0] ? readableBatterySerialNumber : "N/A") + "</h4>";
+    content +=
+        "<h4>Battery Serial Number: " + String(readableBatterySerialNumber[0] ? readableBatterySerialNumber : "N/A") +
+        "</h4>";
     char readableBatteryPartNumber[13];  // One extra space for null terminator
-    memcpy(readableBatteryPartNumber, tesla->battery_partNumber,
-           sizeof(tesla->battery_partNumber));
+    memcpy(readableBatteryPartNumber, tesla->battery_partNumber, sizeof(tesla->battery_partNumber));
     readableBatteryPartNumber[12] = '\0';  // Null terminate the string
-    content += "<h4>Battery Part Number: " +
-               String(readableBatteryPartNumber[0] ? readableBatteryPartNumber : "N/A") + "</h4>";
+    content += "<h4>Battery Part Number: " + String(readableBatteryPartNumber[0] ? readableBatteryPartNumber : "N/A") +
+               "</h4>";
     //0x3C4 PCS_info
     char readablePCSPartNumber[13];  // One extra space for null terminator
-    memcpy(readablePCSPartNumber, tesla->PCS_partNumber,
-           sizeof(tesla->PCS_partNumber));
+    memcpy(readablePCSPartNumber, tesla->PCS_partNumber, sizeof(tesla->PCS_partNumber));
     readablePCSPartNumber[12] = '\0';  // Null terminate the string
-    content +=
-        "<h4>PCS Part Number: " + String(readablePCSPartNumber[0] ? readablePCSPartNumber : "N/A") + "</h4>";
+    content += "<h4>PCS Part Number: " + String(readablePCSPartNumber[0] ? readablePCSPartNumber : "N/A") + "</h4>";
     content += "<h4>Battery Manufacture Date: " +
                String(tesla->battery_manufactureDate ? tesla->battery_manufactureDate : "N/A") + "</h4>";
     content += "<h4>Battery Pack Mass: " + String(packMass) + " KG</h4>";
@@ -230,24 +206,19 @@ class TeslaHtmlRenderer : public BatteryHtmlRenderer {
     content += "<h4>Negative Contactor: " + String(safeIdx(contactorState, tesla->packContNegativeState)) + "</h4>";
     content += "<h4>Positive Contactor: " + String(safeIdx(contactorState, tesla->packContPositiveState)) + "</h4>";
     if (tesla->packContactorSetState == 5) {  //Closed
-      content += "<h4>Closing blocked: " + String(noYes[tesla->packCtrsClosingBlocked]) +
-                 " (already CLOSED)</h4>";
+      content += "<h4>Closing blocked: " + String(noYes[tesla->packCtrsClosingBlocked]) + " (already CLOSED)</h4>";
     } else {
       content += "<h4>Closing blocked: " + String(noYes[tesla->packCtrsClosingBlocked]) + "</h4>";
     }
     content += "<h4>Pyrotest in progress: " + String(noYes[tesla->pyroTestInProgress]) + "</h4>";
-    content += "<h4>Contactors Open Now Requested: " +
-               String(noYes[tesla->battery_packCtrsOpenNowRequested]) + "</h4>";
+    content += "<h4>Contactors Open Now Requested: " + String(noYes[tesla->battery_packCtrsOpenNowRequested]) + "</h4>";
+    content += "<h4>Contactors Open Requested: " + String(noYes[tesla->battery_packCtrsOpenRequested]) + "</h4>";
     content +=
-        "<h4>Contactors Open Requested: " + String(noYes[tesla->battery_packCtrsOpenRequested]) +
+        "<h4>Contactors Request Status: " + String(safeIdx(HVP_contactor, tesla->battery_packCtrsRequestStatus)) +
         "</h4>";
-    content += "<h4>Contactors Request Status: " +
-               String(safeIdx(HVP_contactor, tesla->battery_packCtrsRequestStatus)) + "</h4>";
-    content += "<h4>Contactors Reset Request Required: " +
-               String(noYes[tesla->battery_packCtrsResetRequestRequired]) + "</h4>";
-    content +=
-        "<h4>DC Link Allowed to Energize: " + String(noYes[tesla->battery_dcLinkAllowedToEnergize]) +
-        "</h4>";
+    content += "<h4>Contactors Reset Request Required: " + String(noYes[tesla->battery_packCtrsResetRequestRequired]) +
+               "</h4>";
+    content += "<h4>DC Link Allowed to Energize: " + String(noYes[tesla->battery_dcLinkAllowedToEnergize]) + "</h4>";
     // Comment what data you would like to display, order can be changed.
     //0x352 850 BMS_energyStatus
     if (tesla->BMS352_mux == false) {
@@ -258,8 +229,7 @@ class TeslaHtmlRenderer : public BatteryHtmlRenderer {
       content += "<h4>Ideal Energy Remaining: " + String(ideal_energy_remaining) + " kWh</h4>";
       content += "<h4>Energy to Charge Complete: " + String(energy_to_charge_complete) + " kWh</h4>";
       content += "<h4>Energy Buffer: " + String(energy_buffer) + " kWh</h4>";
-      content += "<h4>Full Charge Complete: " + String(noYes[tesla->battery_full_charge_complete]) +
-                 "</h4>";  //bool
+      content += "<h4>Full Charge Complete: " + String(noYes[tesla->battery_full_charge_complete]) + "</h4>";  //bool
     }
     //0x352 850 BMS_energyStatus
     if (tesla->BMS352_mux == true) {
@@ -323,8 +293,7 @@ class TeslaHtmlRenderer : public BatteryHtmlRenderer {
     //content += "<h4>Max Stationary Heat Power: " + String(BMS_maxStationaryHeatPower) + " kWh</h4>"; // Not giving useable data
     //content += "<h4>HVAC Power Budget: " + String(BMS_hvacPowerBudget) + " kW</h4>"; // Not giving useable data
     //content += "<h4>Not Enough Power For Heat Pump: " + String(noYes[tesla->BMS_notEnoughPowerForHeatPump]) + "</h4>"; // Not giving useable data
-    content +=
-        "<h4>Power Limit State: " + String(safeIdx(BMS_powerLimitState, tesla->BMS_powerLimitState)) + "</h4>";
+    content += "<h4>Power Limit State: " + String(safeIdx(BMS_powerLimitState, tesla->BMS_powerLimitState)) + "</h4>";
     //content += "<h4>Inverter TQF: " + String(tesla->BMS_inverterTQF) + "</h4>"; // Not giving useable data
     //0x312 786 BMS_thermalStatus
     content += "<h4>Power Dissipation: " + String(BMS_powerDissipation) + " kW</h4>";
@@ -337,12 +306,10 @@ class TeslaHtmlRenderer : public BatteryHtmlRenderer {
     content += "<h4>PCS No Flow Request: " + String(Fault[tesla->BMS_pcsNoFlowRequest]) + "</h4>";
     content += "<h4>BMS No Flow Request: " + String(Fault[tesla->BMS_noFlowRequest]) + "</h4>";
     //0x224 548 PCS_dcdcStatus
-    content +=
-        "<h4>Precharge Status: " + String(safeIdx(PCS_dcdcStatus, tesla->PCS_dcdcPrechargeStatus)) + "</h4>";
-    content +=
-        "<h4>12V Support Status: " + String(safeIdx(PCS_dcdcStatus, tesla->PCS_dcdc12VSupportStatus)) + "</h4>";
-    content += "<h4>HV Bus Discharge Status: " +
-               String(safeIdx(PCS_dcdcStatus, tesla->PCS_dcdcHvBusDischargeStatus)) + "</h4>";
+    content += "<h4>Precharge Status: " + String(safeIdx(PCS_dcdcStatus, tesla->PCS_dcdcPrechargeStatus)) + "</h4>";
+    content += "<h4>12V Support Status: " + String(safeIdx(PCS_dcdcStatus, tesla->PCS_dcdc12VSupportStatus)) + "</h4>";
+    content += "<h4>HV Bus Discharge Status: " + String(safeIdx(PCS_dcdcStatus, tesla->PCS_dcdcHvBusDischargeStatus)) +
+               "</h4>";
     content += "<h4>Main State: " + String(safeIdx(PCS_dcdcMainState, tesla->PCS_dcdcMainState)) + "</h4>";
     content += "<h4>Sub State: " + String(safeIdx(PCS_dcdcSubState, tesla->PCS_dcdcSubState)) + "</h4>";
     content += "<h4>PCS Faulted: " + String(Fault[tesla->PCS_dcdcFaulted]) + "</h4>";
@@ -354,8 +321,7 @@ class TeslaHtmlRenderer : public BatteryHtmlRenderer {
     content += "<h4>12V Support Rty Cnt: " + String(tesla->PCS_dcdc12VSupportRtyCnt) + "</h4>";
     content += "<h4>Discharge Rty Cnt: " + String(tesla->PCS_dcdcDischargeRtyCnt) + "</h4>";
     content += "<h4>PWM Enable Line: " + String(Fault[tesla->PCS_dcdcPwmEnableLine]) + "</h4>";
-    content +=
-        "<h4>Supporting Fixed LV Target: " + String(Fault[tesla->PCS_dcdcSupportingFixedLvTarget]) + "</h4>";
+    content += "<h4>Supporting Fixed LV Target: " + String(Fault[tesla->PCS_dcdcSupportingFixedLvTarget]) + "</h4>";
     content += "<h4>Precharge Restart Cnt: " + String(tesla->PCS_dcdcPrechargeRestartCnt) + "</h4>";
     content += "<h4>Initial Precharge Substate: " +
                String(safeIdx(PCS_dcdcSubState, tesla->PCS_dcdcInitialPrechargeSubState)) + "</h4>";
@@ -398,18 +364,15 @@ class TeslaHtmlRenderer : public BatteryHtmlRenderer {
     content += "<h4>HVP_hvp1v5Ref: " + String(HVP_hvp1v5Ref) + " V</h4>";
     content += "<h4>HVP_hvilInVoltage: " + String(HVP_hvilInVoltage) + " V</h4>";
     content += "<h4>HVP_hvilOutVoltage: " + String(HVP_hvilOutVoltage) + " V</h4>";
-    content +=
-        "<h4>HVP_gpioPassivePyroDepl: " + String(Fault[tesla->HVP_gpioPassivePyroDepl]) + "</h4>";
+    content += "<h4>HVP_gpioPassivePyroDepl: " + String(Fault[tesla->HVP_gpioPassivePyroDepl]) + "</h4>";
     content += "<h4>HVP_gpioPyroIsoEn: " + String(Fault[tesla->HVP_gpioPyroIsoEn]) + "</h4>";
     content += "<h4>HVP_gpioCpFaultIn: " + String(Fault[tesla->HVP_gpioCpFaultIn]) + "</h4>";
-    content +=
-        "<h4>HVP_gpioPackContPowerEn: " + String(Fault[tesla->HVP_gpioPackContPowerEn]) + "</h4>";
+    content += "<h4>HVP_gpioPackContPowerEn: " + String(Fault[tesla->HVP_gpioPackContPowerEn]) + "</h4>";
     content += "<h4>HVP_gpioHvCablesOk: " + String(Fault[tesla->HVP_gpioHvCablesOk]) + "</h4>";
     content += "<h4>HVP_gpioHvpSelfEnable: " + String(Fault[tesla->HVP_gpioHvpSelfEnable]) + "</h4>";
     content += "<h4>HVP_gpioLed: " + String(Fault[tesla->HVP_gpioLed]) + "</h4>";
     content += "<h4>HVP_gpioCrashSignal: " + String(Fault[tesla->HVP_gpioCrashSignal]) + "</h4>";
-    content +=
-        "<h4>HVP_gpioShuntDataReady: " + String(Fault[tesla->HVP_gpioShuntDataReady]) + "</h4>";
+    content += "<h4>HVP_gpioShuntDataReady: " + String(Fault[tesla->HVP_gpioShuntDataReady]) + "</h4>";
     content += "<h4>HVP_gpioFcContPosAux: " + String(Fault[tesla->HVP_gpioFcContPosAux]) + "</h4>";
     content += "<h4>HVP_gpioFcContNegAux: " + String(Fault[tesla->HVP_gpioFcContNegAux]) + "</h4>";
     content += "<h4>HVP_gpioBmsEout: " + String(Fault[tesla->HVP_gpioBmsEout]) + "</h4>";
@@ -417,28 +380,20 @@ class TeslaHtmlRenderer : public BatteryHtmlRenderer {
     content += "<h4>HVP_gpioPyroPor: " + String(Fault[tesla->HVP_gpioPyroPor]) + "</h4>";
     content += "<h4>HVP_gpioShuntEn: " + String(Fault[tesla->HVP_gpioShuntEn]) + "</h4>";
     content += "<h4>HVP_gpioHvpVerEn: " + String(Fault[tesla->HVP_gpioHvpVerEn]) + "</h4>";
-    content +=
-        "<h4>HVP_gpioPackCoontPosFlywheel: " + String(Fault[tesla->HVP_gpioPackCoontPosFlywheel]) +
-        "</h4>";
+    content += "<h4>HVP_gpioPackCoontPosFlywheel: " + String(Fault[tesla->HVP_gpioPackCoontPosFlywheel]) + "</h4>";
     content += "<h4>HVP_gpioCpLatchEnable: " + String(Fault[tesla->HVP_gpioCpLatchEnable]) + "</h4>";
     content += "<h4>HVP_gpioPcsEnable: " + String(Fault[tesla->HVP_gpioPcsEnable]) + "</h4>";
-    content +=
-        "<h4>HVP_gpioPcsDcdcPwmEnable: " + String(Fault[tesla->HVP_gpioPcsDcdcPwmEnable]) + "</h4>";
-    content += "<h4>HVP_gpioPcsChargePwmEnable: " + String(Fault[tesla->HVP_gpioPcsChargePwmEnable]) +
-               "</h4>";
-    content +=
-        "<h4>HVP_gpioFcContPowerEnable: " + String(Fault[tesla->HVP_gpioFcContPowerEnable]) + "</h4>";
+    content += "<h4>HVP_gpioPcsDcdcPwmEnable: " + String(Fault[tesla->HVP_gpioPcsDcdcPwmEnable]) + "</h4>";
+    content += "<h4>HVP_gpioPcsChargePwmEnable: " + String(Fault[tesla->HVP_gpioPcsChargePwmEnable]) + "</h4>";
+    content += "<h4>HVP_gpioFcContPowerEnable: " + String(Fault[tesla->HVP_gpioFcContPowerEnable]) + "</h4>";
     content += "<h4>HVP_gpioHvilEnable: " + String(Fault[tesla->HVP_gpioHvilEnable]) + "</h4>";
     content += "<h4>HVP_gpioSecDrdy: " + String(Fault[tesla->HVP_gpioSecDrdy]) + "</h4>";
     content += "<h4>HVP_shuntCurrentDebug: " + String(HVP_shuntCurrentDebug) + " A</h4>";
     content += "<h4>HVP_packCurrentMia: " + String(noYes[tesla->HVP_packCurrentMia]) + "</h4>";
     content += "<h4>HVP_auxCurrentMia: " + String(noYes[tesla->HVP_auxCurrentMia]) + "</h4>";
     content += "<h4>HVP_currentSenseMia: " + String(noYes[tesla->HVP_currentSenseMia]) + "</h4>";
-    content +=
-        "<h4>HVP_shuntRefVoltageMismatch: " + String(noYes[tesla->HVP_shuntRefVoltageMismatch]) +
-        "</h4>";
-    content +=
-        "<h4>HVP_shuntThermistorMia: " + String(noYes[tesla->HVP_shuntThermistorMia]) + "</h4>";
+    content += "<h4>HVP_shuntRefVoltageMismatch: " + String(noYes[tesla->HVP_shuntRefVoltageMismatch]) + "</h4>";
+    content += "<h4>HVP_shuntThermistorMia: " + String(noYes[tesla->HVP_shuntThermistorMia]) + "</h4>";
     content += "<h4>HVP_shuntHwMia: " + String(noYes[tesla->HVP_shuntHwMia]) + "</h4>";
     //content += "<h4>HVP_fcLinkVoltage: " + String(HVP_fcLinkVoltage) + " V</h4>"; // Not giving useable data
     //content += "<h4>HVP_packNegativeV: " + String(HVP_packNegativeV) + " V</h4>"; // Not giving useable data
