@@ -44,8 +44,6 @@ void init_events(void) {
   events.entries[EVENT_CAN_INVERTER_MISSING].level = EVENT_LEVEL_ERROR;
   events.entries[EVENT_CONTACTOR_WELDED].level = EVENT_LEVEL_WARNING;
   events.entries[EVENT_CONTACTOR_OPEN].level = EVENT_LEVEL_WARNING;
-  events.entries[EVENT_CPU_OVERHEATING].level = EVENT_LEVEL_WARNING;
-  events.entries[EVENT_CPU_OVERHEATED].level = EVENT_LEVEL_ERROR;
   events.entries[EVENT_WATER_INGRESS].level = EVENT_LEVEL_ERROR;
   events.entries[EVENT_CHARGE_LIMIT_EXCEEDED].level = EVENT_LEVEL_INFO;
   events.entries[EVENT_DISCHARGE_LIMIT_EXCEEDED].level = EVENT_LEVEL_INFO;
@@ -204,10 +202,6 @@ String get_event_message_string(EVENTS_ENUM_TYPE event) {
       return "Contactors sticking/welded. Inspect battery with caution!";
     case EVENT_CONTACTOR_OPEN:
       return "Battery decided to open contactors. Inspect battery!";
-    case EVENT_CPU_OVERHEATING:
-      return "Battery-Emulator CPU overheating! Increase airflow/cooling to increase hardware lifespan!";
-    case EVENT_CPU_OVERHEATED:
-      return "Battery-Emulator CPU melting! Performing controlled shutdown until temperature drops!";
     case EVENT_CHARGE_LIMIT_EXCEEDED:
       return "Inverter is charging faster than battery is allowing.";
     case EVENT_DISCHARGE_LIMIT_EXCEEDED:
@@ -483,17 +477,17 @@ static void update_bms_status(void) {
     case EVENT_LEVEL_INFO:
     case EVENT_LEVEL_WARNING:
     case EVENT_LEVEL_DEBUG:
-      datalayer.battery.status.bms_status = ACTIVE;
+      datalayer.system.status.system_status = ACTIVE;
       break;
     case EVENT_LEVEL_UPDATE:
-      datalayer.battery.status.bms_status = UPDATING;
+      datalayer.system.status.system_status = UPDATING;
       break;
     case EVENT_LEVEL_ERROR:
       // Normally FAULT mode is set if a catastrophic event has triggered, but incase user has forced a recovery charge, we override any FAULT and continue temporarily in active mode
       if (datalayer.battery.settings.user_requests_forced_charging_recovery_mode) {
-        datalayer.battery.status.bms_status = ACTIVE;  //Edge case which is active for 30min max
+        datalayer.system.status.system_status = ACTIVE;  //Edge case which is active for 30min max
       } else {
-        datalayer.battery.status.bms_status = FAULT;  //We will in 99.999% of the time go here
+        datalayer.system.status.system_status = FAULT;  //We will in 99.999% of the time go here
       }
       break;
     default:

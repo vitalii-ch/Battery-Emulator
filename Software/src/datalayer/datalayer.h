@@ -104,8 +104,7 @@ struct DATALAYER_BATTERY_STATUS_TYPE {
    * the parser receives its first frame; otherwise parallel_safety and
    * EVENT_CAN_BATTERY_MISSING are blind for the first 60 seconds. */
   uint8_t CAN_battery_still_alive = 0;
-  /** The current system status, which for now still has the name bms_status */
-  bms_status_enum bms_status = ACTIVE;
+
   /** The current battery status, which for now has the name real_bms_status */
   real_bms_status_enum real_bms_status = BMS_DISCONNECTED;
   /** LED mode, customizable by user */
@@ -362,6 +361,8 @@ struct DATALAYER_SYSTEM_STATUS_TYPE {
   bool contactors_battery3_engaged = false;
   /** State of BMS reset sequence */
   BMSResetState bms_reset_status = BMS_RESET_IDLE;
+  /** The current system status, determined by which Events are active, usually pending between ACTIVE and FAULT, but there are more enums. Used to signal incase we have a critical fault active, or if we should proceed operating */
+  system_status_enum system_status = ACTIVE;
 };
 
 struct DATALAYER_SYSTEM_TYPE {

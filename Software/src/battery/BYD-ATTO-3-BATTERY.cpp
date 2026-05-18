@@ -221,6 +221,11 @@ void BydAttoBattery::
     datalayer_bydatto->BMC_SOC_original_calibration = BMC_SOC_original_calibration;
     datalayer_bydatto->BMS_capacity_current_calibration = BMS_capacity_current_calibration;
     datalayer_bydatto->BMC_SOC_current_calibration = BMC_SOC_current_calibration;
+    // Pre-fill from BMS on first read so the web page shows real pack AH, not the 150AH default
+    if (!calibrationAH_seeded && BMS_capacity_current_calibration > 0) {
+      datalayer_bydatto->calibrationTargetAH = BMS_capacity_current_calibration / 100;
+      calibrationAH_seeded = true;
+    }
     datalayer_bydatto->chargePower = BMS_allowed_charge_power;
     datalayer_bydatto->charge_times = BMS_charge_times;
     datalayer_bydatto->dischargePower = BMS_allowed_discharge_power;
@@ -462,7 +467,7 @@ void BydAttoBattery::transmit_can(unsigned long currentMillis) {
 
     // Set close contactors to allowed (Useful for crashed packs, started via contactor control thru GPIO)
     if (allows_contactor_closing) {
-      if (datalayer_battery->status.bms_status == ACTIVE) {
+      if (datalayer.system.status.system_status == ACTIVE) {
         *allows_contactor_closing = true;
       } else {  // Fault state, open contactors!
         *allows_contactor_closing = false;
