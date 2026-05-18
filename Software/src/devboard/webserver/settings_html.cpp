@@ -405,6 +405,10 @@ String raw_settings_processor(const String& var, BatteryEmulatorSettingsStore& s
     return settings.getBool("CNTCTRL") ? "checked" : "";
   }
 
+  if (var == "LOWPASSFILTER") {
+    return settings.getBool("LOWPASSFILTER") ? "checked" : "";
+  }
+
   if (var == "NCCONTACTOR") {
     return settings.getBool("NCCONTACTOR") ? "checked" : "";
   }
@@ -475,6 +479,10 @@ String raw_settings_processor(const String& var, BatteryEmulatorSettingsStore& s
 
   if (var == "DCHGPOWER") {
     return String(settings.getUInt("DCHGPOWER", 0));
+  }
+
+  if (var == "RAMPDOWNSOC") {
+    return String(settings.getUInt("RAMPDOWNSOC", 9000));
   }
 
   if (var == "LOCALIP1") {
@@ -883,6 +891,26 @@ String raw_settings_processor(const String& var, BatteryEmulatorSettingsStore& s
     return settings.getBool("CTINVERT") ? "checked" : "";
   }
 
+  if (var == "DALYPWRPCT") {
+    return String(settings.getUInt("DALYPWRPCT", 50));
+  }
+
+  if (var == "DALYPWRDV") {
+    return String(settings.getUInt("DALYPWRDV", 50));
+  }
+
+  if (var == "DALYDVSTART") {
+    return String(settings.getUInt("DALYDVSTART", 20));
+  }
+
+  if (var == "DALYPWRDEG") {
+    return String(settings.getUInt("DALYPWRDEG", 60));
+  }
+
+  if (var == "DALYPWR0C") {
+    return String(settings.getUInt("DALYPWR0C", 800));
+  }
+
   return String();
 }
 
@@ -1155,6 +1183,11 @@ const char* getCANInterfaceName(CAN_Interface interface) {
       display: contents;
     }
 
+    form .if-daly { display: none; }
+    form[data-battery="23"] .if-daly {
+      display: contents;
+    }
+
     form .if-tesla { display: none; }
     form[data-battery="32"] .if-tesla, form[data-battery="33"] .if-tesla {
       display: contents;
@@ -1172,6 +1205,7 @@ const char* getCANInterfaceName(CAN_Interface interface) {
     form[data-battery="40"] .if-estimated,
     form[data-battery="41"] .if-estimated,
     form[data-battery="44"] .if-estimated,
+    form[data-battery="50"] .if-estimated,
     form[data-battery="51"] .if-estimated {
       display: contents;
     }
@@ -1179,7 +1213,8 @@ const char* getCANInterfaceName(CAN_Interface interface) {
     form .if-socestimated { display: none; } /* Integrations where you can turn on SOC estimation */
     form[data-battery="16"] .if-socestimated,
     form[data-battery="26"] .if-socestimated,
-    form[data-battery="41"] .if-socestimated {
+    form[data-battery="41"] .if-socestimated,
+    form[data-battery="42"] .if-socestimated {
       display: contents;
     }
 
@@ -1320,6 +1355,33 @@ const char* getCANInterfaceName(CAN_Interface interface) {
             <input type='checkbox' name='INTERLOCKREQ' id='interlock' value='on' %INTERLOCKREQ% />
         </div>
 
+        <div class="if-daly">
+          <label>Power limit per percent SOC above 80 / below 20 (W/pct): </label>
+          <input type='number' name='DALYPWRPCT' value="%DALYPWRPCT%"
+          min="1" max="10000" step="1"
+          title="Below 20% and above 80% SOC, limit power to this value * SOC% (e.g. 50 W/% means 150W at 3%, 500W at 10%)" />
+
+          <label>Voltage difference for start of voltage based discharge limit (dV): </label>
+          <input type='number' name='DALYDVSTART' value="%DALYDVSTART%"
+          min="1" max="200" step="1"
+          title="Power limiting begins when pack voltage is this many dV above the discharge voltage limit (default 20 = 2.0V)" />
+
+          <label>Max power per dV distance from minimum voltage (W/dV): </label>
+          <input type='number' name='DALYPWRDV' value="%DALYPWRDV%"
+          min="1" max="10000" step="1"
+          title="Max power per dV when approaching the discharge voltage limit" />
+
+          <label>Power change per °C above/below 0°C (W/°C): </label>
+          <input type='number' name='DALYPWRDEG' value="%DALYPWRDEG%"
+          min="1" max="10000" step="1"
+          title="Max power added or removed per degree above or below 0°C" />
+
+          <label>Power at 0°C (W): </label>
+          <input type='number' name='DALYPWR0C' value="%DALYPWR0C%"
+          min="0" max="100000" step="1"
+          title="Maximum allowed charge/discharge power at exactly 0°C" />
+        </div>
+
         <div class="if-tesla">
           <label for='digitalhvil'>Digital HVIL (2024+): </label>
           <input type='checkbox' name='DIGITALHVIL' id='digitalhvil' value='on' %DIGITALHVIL% />
@@ -1349,6 +1411,11 @@ const char* getCANInterfaceName(CAN_Interface interface) {
         <input type='number' name='DCHGPOWER' value="%DCHGPOWER%" 
         min="0" max="65000" step="1"
         title="Continous max discharge power. Used since CAN data not valid for this integration. Do not set too high!" />
+
+        <label>Rampdown SOC, pptt: </label>
+        <input type='number' name='RAMPDOWNSOC' value="%RAMPDOWNSOC%" 
+        min="7000" max="9000" step="1"
+        title="SOC percentage to start ramping down from max charge power towards 0W at 100.00pct" />
         </div>
 
         <div class="if-socestimated">
@@ -1429,6 +1496,10 @@ const char* getCANInterfaceName(CAN_Interface interface) {
         %INVCOMM%     
         </select>
         </div>
+
+        <label>Inverter limits low pass filter: </label>
+        <input type='checkbox' name='LOWPASSFILTER' value='on' %LOWPASSFILTER% 
+        title="Applies a low pass filter to charge/discharge rates to prevent oscillation." />
 
         <div class="if-sofar">
         <label>Sofar Battery ID (0-15): </label>
